@@ -36,46 +36,52 @@ export async function extractText(buffer, fileType) {
 }
 
 /**
- * Extract text from PDF using pdf-parse
- * Uses older version that's more compatible with Next.js
+ * Extract text from PDF
+ * Note: PDF parsing is limited in serverless environments
+ * Try using DOCX for better results
  */
 async function extractFromPdf(buffer) {
   try {
-    // Use setTimeout to prevent hanging
-    const timeoutMs = 30000; // 30 second timeout
+    const { PDFDocument } = await import("pdf-lib");
 
-    // Use dynamic require to load pdf-parse
-    const { createRequire } = await import("module");
-    const require = createRequire(import.meta.url);
-    const pdfParse = require("pdf-parse");
+    const pdfDoc = await PDFDocument.load(buffer);
+    const pages = pdfDoc.getPages();
 
-    // Wrap in timeout promise
-    const result = await Promise.race([
-      pdfParse(buffer, { max: 1 }), // Only parse first page to speed up
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("PDF parsing timeout")), timeoutMs),
-      ),
-    ]);
+    if (pages.length === 0) {
+      return { success: false, error: "PDF has no pages" };
+    }
 
-    if (!result.text || result.text.trim().length === 0) {
-      return { success: false, error: "No text content found in PDF" };
+    // Extract text from first few pages (limited for performance)
+    let fullText = "";
+    const maxPages = Math.min(pages.length, 3);
+
+    for (let i = 0; i < maxPages; i++) {
+      const page = pages[i];
+      const { text } = await page.getTextContent();
+      const pageText = text.items.map((item) => item.str).join(" ");
+      fullText += pageText + "\n";
+    }
+
+    if (!fullText.trim()) {
+      return {
+        success: false,
+        error:
+          "Could not extract text from PDF. PDF may contain images instead of text. Try converting to DOCX.",
+      };
     }
 
     return {
       success: true,
-      text: cleanText(result.text),
+      text: cleanText(fullText),
       metadata: {
-        pages: result.numpages || 1,
+        pages: pages.length,
       },
     };
   } catch (error) {
     console.error("PDF extraction error:", error);
     return {
       success: false,
-      error:
-        error.message === "PDF parsing timeout"
-          ? "PDF parsing timed out. Try a smaller file."
-          : `Failed to extract PDF: ${error.message}`,
+      error: `PDF parsing failed: ${error.message}. Please try converting your PDF to DOCX format.`,
     };
   }
 }
