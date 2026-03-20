@@ -1,5 +1,4 @@
 import mammoth from "mammoth";
-import pdf2json from "pdf2json";
 
 /**
  * Extract text from various file formats
@@ -37,65 +36,46 @@ export async function extractText(buffer, fileType) {
 }
 
 /**
- * Extract text from PDF using pdf2json
+ * Extract text from PDF using pdf-parse
+ * Uses older version that's more compatible with Next.js
  */
 async function extractFromPdf(buffer) {
   try {
-    const PdfReader = pdf2json.default || pdf2json;
-    const pdfReader = new PdfReader();
+    // Use setTimeout to prevent hanging
+    const timeoutMs = 30000; // 30 second timeout
 
-    return new Promise((resolve) => {
-      pdfReader.parseBuffer(buffer, (error, pdf) => {
-        if (error) {
-          console.error("PDF parsing error:", error);
-          resolve({
-            success: false,
-            error: `Failed to parse PDF: ${error.message}`,
-          });
-          return;
-        }
+    // Use dynamic require to load pdf-parse
+    const { createRequire } = await import("module");
+    const require = createRequire(import.meta.url);
+    const pdfParse = require("pdf-parse");
 
-        if (!pdf || !pdf.pages || pdf.pages.length === 0) {
-          resolve({
-            success: false,
-            error: "No pages found in PDF",
-          });
-          return;
-        }
+    // Wrap in timeout promise
+    const result = await Promise.race([
+      pdfParse(buffer, { max: 1 }), // Only parse first page to speed up
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("PDF parsing timeout")), timeoutMs),
+      ),
+    ]);
 
-        // Extract text from all pages
-        let fullText = "";
-        for (const page of pdf.pages) {
-          if (page.texts) {
-            for (const textItem of page.texts) {
-              fullText += textItem.str || "";
-            }
-            fullText += "\n";
-          }
-        }
+    if (!result.text || result.text.trim().length === 0) {
+      return { success: false, error: "No text content found in PDF" };
+    }
 
-        if (!fullText.trim()) {
-          resolve({
-            success: false,
-            error: "No text content found in PDF",
-          });
-          return;
-        }
-
-        resolve({
-          success: true,
-          text: cleanText(fullText),
-          metadata: {
-            pages: pdf.pages.length,
-          },
-        });
-      });
-    });
+    return {
+      success: true,
+      text: cleanText(result.text),
+      metadata: {
+        pages: result.numpages || 1,
+      },
+    };
   } catch (error) {
     console.error("PDF extraction error:", error);
     return {
       success: false,
-      error: `Failed to extract PDF: ${error.message}`,
+      error:
+        error.message === "PDF parsing timeout"
+          ? "PDF parsing timed out. Try a smaller file."
+          : `Failed to extract PDF: ${error.message}`,
     };
   }
 }
