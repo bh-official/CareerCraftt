@@ -217,6 +217,11 @@ export function AnalysisProvider({ children }) {
         throw new Error(data.error || "Cover letter generation failed");
       }
 
+      // Handle null coverLetter
+      if (!data.coverLetter) {
+        throw new Error("Cover letter generation returned empty result");
+      }
+
       dispatch({ type: "SET_COVER_LETTER", payload: data.coverLetter });
       return data;
     } catch (error) {

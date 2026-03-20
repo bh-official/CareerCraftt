@@ -34,7 +34,21 @@ async function callOpenRouter(messages, options = {}) {
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  const message = data.choices[0].message;
+
+  // Check for refusal
+  if (message.refusal) {
+    throw new Error(`AI refused: ${message.refusal}`);
+  }
+
+  const content = message.content;
+
+  if (!content || content.trim() === "") {
+    console.error("Empty AI response, full message:", JSON.stringify(message));
+    throw new Error("AI returned empty response. Please try again.");
+  }
+
+  return content;
 }
 
 /**
@@ -150,13 +164,52 @@ Respond ONLY with valid JSON, no additional text.
   ]);
 
   try {
-    return JSON.parse(result);
-  } catch {
-    // Try to extract JSON from response
-    const jsonMatch = result.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+    // First, try to extract JSON from markdown code blocks
+    const codeBlockMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      return JSON.parse(codeBlockMatch[1].trim());
     }
+
+    // Try direct parse first
+    return JSON.parse(result);
+  } catch (parseError) {
+    // Handle null/undefined result
+    if (!result) {
+      throw new Error("AI returned empty response");
+    }
+
+    // Try to extract JSON array or object from response
+    const jsonMatch = result.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+    if (jsonMatch) {
+      try {
+        // Fix common JSON issues
+        let fixedJson = jsonMatch[0]
+          .replace(/,\s*}/g, "}")
+          .replace(/,\s*\]/g, "]")
+          .replace(/'+/g, '"') // Replace single quotes with double quotes
+          .replace(/(\w+):/g, '"$1":'); // Add quotes to unquoted keys
+
+        // Try parsing with the fixes
+        try {
+          return JSON.parse(fixedJson);
+        } catch {
+          // Try additional fixes - handle unterminated strings
+          fixedJson = fixedJson.replace(/"([^"]*)$/g, '"'); // Close unterminated strings
+          try {
+            return JSON.parse(fixedJson);
+          } catch {
+            // Last resort - try eval (should be safe for simple JSON)
+            return new Function("return " + fixedJson)();
+          }
+        }
+      } catch {
+        console.error("Failed to parse AI response:", result);
+        throw new Error(
+          "Failed to parse AI response as JSON: " + parseError.message,
+        );
+      }
+    }
+    console.error("Failed to parse AI response:", result);
     throw new Error("Failed to parse AI response as JSON");
   }
 }

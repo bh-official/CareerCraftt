@@ -1,4 +1,5 @@
 import mammoth from "mammoth";
+import pdf2json from "pdf2json";
 
 /**
  * Extract text from various file formats
@@ -36,35 +37,66 @@ export async function extractText(buffer, fileType) {
 }
 
 /**
- * Extract text from PDF - using built-in approach
+ * Extract text from PDF using pdf2json
  */
 async function extractFromPdf(buffer) {
-  // Dynamic import of pdf-parse for ESM compatibility
   try {
-    const pdf = await import("pdf-parse");
-    const data = await pdf.default(buffer);
+    const PdfReader = pdf2json.default || pdf2json;
+    const pdfReader = new PdfReader();
 
-    if (!data.text || data.text.trim().length === 0) {
-      return { success: false, error: "No text content found in PDF" };
-    }
+    return new Promise((resolve) => {
+      pdfReader.parseBuffer(buffer, (error, pdf) => {
+        if (error) {
+          console.error("PDF parsing error:", error);
+          resolve({
+            success: false,
+            error: `Failed to parse PDF: ${error.message}`,
+          });
+          return;
+        }
 
-    return {
-      success: true,
-      text: cleanText(data.text),
-      metadata: {
-        pages: data.numpages,
-        title: data.info?.Title || "",
-        author: data.info?.Author || "",
-      },
-    };
+        if (!pdf || !pdf.pages || pdf.pages.length === 0) {
+          resolve({
+            success: false,
+            error: "No pages found in PDF",
+          });
+          return;
+        }
+
+        // Extract text from all pages
+        let fullText = "";
+        for (const page of pdf.pages) {
+          if (page.texts) {
+            for (const textItem of page.texts) {
+              fullText += textItem.str || "";
+            }
+            fullText += "\n";
+          }
+        }
+
+        if (!fullText.trim()) {
+          resolve({
+            success: false,
+            error: "No text content found in PDF",
+          });
+          return;
+        }
+
+        resolve({
+          success: true,
+          text: cleanText(fullText),
+          metadata: {
+            pages: pdf.pages.length,
+          },
+        });
+      });
+    });
   } catch (error) {
-    if (error.message?.includes("Invalid PDF structure")) {
-      return {
-        success: false,
-        error: "The PDF file appears to be corrupted or invalid",
-      };
-    }
-    throw error;
+    console.error("PDF extraction error:", error);
+    return {
+      success: false,
+      error: `Failed to extract PDF: ${error.message}`,
+    };
   }
 }
 
@@ -82,27 +114,37 @@ async function extractFromDocx(buffer) {
     return {
       success: true,
       text: cleanText(result.value),
-      warnings: result.warnings,
     };
   } catch (error) {
-    throw error;
+    console.error("DOCX extraction error:", error);
+    return {
+      success: false,
+      error: `Failed to extract DOCX: ${error.message}`,
+    };
   }
 }
 
 /**
- * Extract text from plain text
+ * Extract text from TXT
  */
 async function extractFromTxt(buffer) {
   try {
     const text = buffer.toString("utf-8");
 
     if (!text || text.trim().length === 0) {
-      return { success: false, error: "No text content found in file" };
+      return { success: false, error: "No text content found in TXT file" };
     }
 
-    return { success: true, text: cleanText(text) };
+    return {
+      success: true,
+      text: cleanText(text),
+    };
   } catch (error) {
-    throw error;
+    console.error("TXT extraction error:", error);
+    return {
+      success: false,
+      error: `Failed to extract TXT: ${error.message}`,
+    };
   }
 }
 
@@ -112,178 +154,41 @@ async function extractFromTxt(buffer) {
 function cleanText(text) {
   if (!text) return "";
 
-  return (
-    text
-      // Remove multiple newlines
-      .replace(/\n{3,}/g, "\n\n")
-      // Remove multiple spaces
-      .replace(/[ \t]{2,}/g, " ")
-      // Remove carriage returns
-      .replace(/\r\n/g, "\n")
-      .replace(/\r/g, "\n")
-      // Trim each line
-      .split("\n")
-      .map((line) => line.trim())
-      .join("\n")
-      // Trim overall
-      .trim()
-  );
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 }
 
 /**
  * Validate uploaded file
  */
 export function validateFile(file) {
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".txt"];
+  const allowedExtensions = ["pdf", "docx", "txt"];
 
   if (!file) {
     return { valid: false, error: "No file provided" };
   }
 
-  if (file.size > MAX_SIZE) {
-    return { valid: false, error: "File size exceeds 5MB limit" };
-  }
-
-  const ext = file.name?.toLowerCase().split(".").pop() || "";
-  if (!ALLOWED_EXTENSIONS.includes(`.${ext}`)) {
+  const ext = file.name?.split(".").pop()?.toLowerCase();
+  if (!ext || !allowedExtensions.includes(ext)) {
     return {
       valid: false,
-      error: `Unsupported file type. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`,
+      error: `Invalid file type. Allowed: ${allowedExtensions.join(", ")}`,
+    };
+  }
+
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    return {
+      valid: false,
+      error: "File too large. Maximum size: 10MB",
     };
   }
 
   return { valid: true };
 }
 
-/**
- * Parse job description into structured data
- */
-export function parseJobDescription(text) {
-  const sections = {
-    requirements: [],
-    responsibilities: [],
-    qualifications: [],
-    preferred: [],
-    benefits: [],
-  };
-
-  const lines = text.split("\n");
-  let currentSection = "requirements";
-
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase().trim();
-
-    if (lowerLine.includes("requirement") || lowerLine.includes("minimum")) {
-      currentSection = "requirements";
-    } else if (
-      lowerLine.includes("responsibilit") ||
-      lowerLine.includes("duty")
-    ) {
-      currentSection = "responsibilities";
-    } else if (
-      lowerLine.includes("qualification") ||
-      lowerLine.includes("skill")
-    ) {
-      currentSection = "qualifications";
-    } else if (
-      lowerLine.includes("preferred") ||
-      lowerLine.includes("nice to have")
-    ) {
-      currentSection = "preferred";
-    } else if (lowerLine.includes("benefit") || lowerLine.includes("perk")) {
-      currentSection = "benefits";
-    }
-
-    // Extract bullet points
-    const cleanedLine = line.replace(/^[-•*]\s*/, "").trim();
-    if (cleanedLine.length > 10 && cleanedLine.length < 200) {
-      sections[currentSection].push(cleanedLine);
-    }
-  }
-
-  return sections;
-}
-
-/**
- * Extract key requirements from job description
- */
-export function extractJobRequirements(text) {
-  const keywords = {
-    skills: [],
-    experience: [],
-    education: [],
-    certifications: [],
-  };
-
-  // Common skill patterns
-  const skillPatterns = [
-    /programming\s+languages?:\s*([^\n]+)/i,
-    /technologies?:\s*([^\n]+)/i,
-    /tools?:\s*([^\n]+)/i,
-    /skills?:\s*([^\n]+)/i,
-    /(javascript|python|java|react|node|sql|aws|docker|kubernetes|git|html|css|typescript)/gi,
-  ];
-
-  // Experience patterns
-  const experiencePatterns = [
-    /(\d+)\+?\s*years?\s+(of\s+)?experience/i,
-    /experience\s+(in|with)\s+([^\n]+)/i,
-    /(\d+)-\d+\s+years?/i,
-  ];
-
-  // Education patterns
-  const educationPatterns = [
-    /(bachelor|master|phd|doctorate|degree)/gi,
-    /(bs|ba|ms|ma|phd)\s+(in|of)/gi,
-    /(computer\s+science|engineering|business)/gi,
-  ];
-
-  // Certification patterns
-  const certPatterns = [
-    /(certified|certification|certificate)/gi,
-    /(aws|azure|google|pmp|scrum|agile)/gi,
-  ];
-
-  for (const pattern of skillPatterns) {
-    const matches = text.match(pattern);
-    if (matches) {
-      keywords.skills.push(...matches.slice(1).map((m) => m.trim()));
-    }
-  }
-
-  for (const pattern of experiencePatterns) {
-    const matches = text.match(pattern);
-    if (matches) {
-      keywords.experience.push(matches[0]);
-    }
-  }
-
-  for (const pattern of educationPatterns) {
-    const matches = text.match(pattern);
-    if (matches) {
-      keywords.education.push(...matches);
-    }
-  }
-
-  for (const pattern of certPatterns) {
-    const matches = text.match(pattern);
-    if (matches) {
-      keywords.certifications.push(...matches);
-    }
-  }
-
-  // Deduplicate
-  Object.keys(keywords).forEach((key) => {
-    keywords[key] = [...new Set(keywords[key])];
-  });
-
-  return keywords;
-}
-
-export default {
-  extractText,
-  validateFile,
-  parseJobDescription,
-  extractJobRequirements,
-};
+export default { extractText, validateFile };
