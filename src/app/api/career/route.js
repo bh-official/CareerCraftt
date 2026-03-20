@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { generateCareerDevelopment } from "@/lib/aiService";
 import { query } from "@/lib/db";
 
 export async function POST(request) {
   try {
+    // Authenticate user
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { jobDescription, resumeText, sessionId } = body;
 

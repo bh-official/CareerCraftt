@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { query } from "@/lib/db";
 
 // Get session by ID
 export async function GET(request) {
   try {
+    // Authenticate user
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("id");
 
@@ -28,8 +35,8 @@ export async function GET(request) {
       LEFT JOIN application_optimizations ao ON ao.session_id = s.id
       LEFT JOIN interview_prep ip ON ip.session_id = s.id
       LEFT JOIN career_development cd ON cd.session_id = s.id
-      WHERE s.id = $1`,
-      [sessionId],
+      WHERE s.id = $1 AND (s.user_id = $2 OR s.user_id IS NULL)`,
+      [sessionId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -52,12 +59,18 @@ export async function GET(request) {
 // Create new session
 export async function POST(request) {
   try {
+    // Authenticate user
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, jobDescription, resumeText, companyName, jobTitle } = body;
 
     const result = await query(
-      `INSERT INTO sessions (name, job_description, resume_text, company_name, job_title)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO sessions (name, job_description, resume_text, company_name, job_title, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
         name || "New Analysis",
@@ -65,6 +78,7 @@ export async function POST(request) {
         resumeText,
         companyName,
         jobTitle,
+        userId,
       ],
     );
 
@@ -84,6 +98,12 @@ export async function POST(request) {
 // Delete session
 export async function DELETE(request) {
   try {
+    // Authenticate user
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("id");
 
@@ -94,7 +114,11 @@ export async function DELETE(request) {
       );
     }
 
-    await query("DELETE FROM sessions WHERE id = $1", [sessionId]);
+    // Only delete if session belongs to user or user_id is null (legacy data)
+    await query(
+      "DELETE FROM sessions WHERE id = $1 AND (user_id = $2 OR user_id IS NULL)",
+      [sessionId, userId],
+    );
 
     return NextResponse.json({
       success: true,

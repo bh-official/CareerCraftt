@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { analyzeJobMatch } from "@/lib/aiService";
 import { query } from "@/lib/db";
 
 export async function POST(request) {
   try {
+    // Authenticate user
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { jobDescription, resumeText, companyName, jobTitle, sessionId } =
       body;
@@ -32,17 +39,17 @@ export async function POST(request) {
     if (sessionId) {
       await query(
         `UPDATE sessions 
-         SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, updated_at = NOW()
-         WHERE id = $5`,
-        [jobDescription, resumeText, companyName, jobTitle, sessionId],
+         SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, user_id = COALESCE(user_id, $5), updated_at = NOW()
+         WHERE id = $6`,
+        [jobDescription, resumeText, companyName, jobTitle, userId, sessionId],
       );
       sessionResult = { id: sessionId };
     } else {
       sessionResult = await query(
-        `INSERT INTO sessions (job_description, resume_text, company_name, job_title) 
-         VALUES ($1, $2, $3, $4) 
+        `INSERT INTO sessions (job_description, resume_text, company_name, job_title, user_id) 
+         VALUES ($1, $2, $3, $4, $5) 
          RETURNING id`,
-        [jobDescription, resumeText, companyName, jobTitle],
+        [jobDescription, resumeText, companyName, jobTitle, userId],
       );
     }
 
