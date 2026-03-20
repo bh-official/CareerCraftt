@@ -1,6 +1,6 @@
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+const DEFAULT_MODEL = "openai/gpt-5.4-nano";
 
 /**
  * Call OpenRouter API
@@ -23,7 +23,7 @@ async function callOpenRouter(messages, options = {}) {
       model: options.model || DEFAULT_MODEL,
       messages,
       temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 2000,
+      max_tokens: options.maxTokens || 6000,
       ...options,
     }),
   });
