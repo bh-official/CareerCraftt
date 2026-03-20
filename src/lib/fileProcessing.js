@@ -42,40 +42,12 @@ export async function extractText(buffer, fileType) {
  */
 async function extractFromPdf(buffer) {
   try {
-    const { PDFDocument } = await import("pdf-lib");
-
-    const pdfDoc = await PDFDocument.load(buffer);
-    const pages = pdfDoc.getPages();
-
-    if (pages.length === 0) {
-      return { success: false, error: "PDF has no pages" };
-    }
-
-    // Extract text from first few pages (limited for performance)
-    let fullText = "";
-    const maxPages = Math.min(pages.length, 3);
-
-    for (let i = 0; i < maxPages; i++) {
-      const page = pages[i];
-      const { text } = await page.getTextContent();
-      const pageText = text.items.map((item) => item.str).join(" ");
-      fullText += pageText + "\n";
-    }
-
-    if (!fullText.trim()) {
-      return {
-        success: false,
-        error:
-          "Could not extract text from PDF. PDF may contain images instead of text. Try converting to DOCX.",
-      };
-    }
-
+    // PDF text extraction is not available in serverless environments
+    // Please use DOCX format or paste text directly
     return {
-      success: true,
-      text: cleanText(fullText),
-      metadata: {
-        pages: pages.length,
-      },
+      success: false,
+      error:
+        "PDF text extraction is unavailable. Please convert PDF to DOCX or paste text directly.",
     };
   } catch (error) {
     console.error("PDF extraction error:", error);

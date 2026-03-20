@@ -23,7 +23,7 @@ async function callOpenRouter(messages, options = {}) {
       model: options.model || DEFAULT_MODEL,
       messages,
       temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 4000,
+      max_tokens: options.maxTokens || 2000,
       ...options,
     }),
   });
@@ -34,7 +34,11 @@ async function callOpenRouter(messages, options = {}) {
   }
 
   const data = await response.json();
+  console.log("OpenRouter response:", JSON.stringify(data, null, 2));
   const message = data.choices[0].message;
+
+  // Log finish reason for debugging
+  console.log("Finish reason:", data.choices[0].finish_reason);
 
   // Check for refusal
   if (message.refusal) {
@@ -45,6 +49,7 @@ async function callOpenRouter(messages, options = {}) {
 
   if (!content || content.trim() === "") {
     console.error("Empty AI response, full message:", JSON.stringify(message));
+    console.error("Full API response:", JSON.stringify(data));
     throw new Error("AI returned empty response. Please try again.");
   }
 
@@ -106,52 +111,12 @@ Provide a comprehensive analysis with the following structure:
    - Provide confidence level (0-100)
 
 ## OUTPUT FORMAT (JSON only):
-{
-  "overallScore": <0-100>,
-  "skills": {
-    "score": <0-100>,
-    "confidence": <0-100>,
-    "matched": ["skill1", "skill2"],
-    "missing": ["skill3", "skill4"],
-    "partial": ["skill5"]
-  },
-  "experience": {
-    "score": <0-100>,
-    "confidence": <0-100>,
-    "yearsMatch": "partial/strong/weak",
-    "domainMatch": "description"
-  },
-  "education": {
-    "score": <0-100>,
-    "confidence": <0-100>,
-    "meetsRequirement": true/false,
-    "fieldAlignment": "description"
-  },
-  "keywords": {
-    "score": <0-100>,
-    "confidence": <0-100>,
-    "coverage": <0-100>,
-    "missingKeywords": []
-  },
-  "additional": {
-    "score": <0-100>,
-    "confidence": <0-100>,
-    "factors": []
-  },
-  "gapAnalysis": [
-    {
-      "gap": "skill/name",
-      "severity": "critical/preferred/enhancement",
-      "recommendation": "specific course or action",
-      "timeline": "estimated time to acquire"
-    }
-  ],
-  "matchedRequirements": [],
-  "unmatchedRequirements": [],
-  "partialMatches": []
-}
+Respond with ONLY valid JSON, no markdown, no code blocks, no extra text.
 
-Respond ONLY with valid JSON, no additional text.
+Use this exact structure (fill in all values):
+{"overallScore":0,"skills":{"score":0,"confidence":0,"matched":[],"missing":[],"partial":[]},"experience":{"score":0,"confidence":0,"yearsMatch":"","domainMatch":""},"education":{"score":0,"confidence":0,"meetsRequirement":false,"fieldAlignment":""},"keywords":{"score":0,"confidence":0,"coverage":0,"missingKeywords":[]},"additional":{"score":0,"confidence":0,"factors":[]}}
+
+IMPORTANT: Complete ALL fields. Do not truncate. Close all strings with double quotes.
 `;
 
   const result = await callOpenRouter([
@@ -193,13 +158,32 @@ Respond ONLY with valid JSON, no additional text.
         try {
           return JSON.parse(fixedJson);
         } catch {
-          // Try additional fixes - handle unterminated strings
-          fixedJson = fixedJson.replace(/"([^"]*)$/g, '"'); // Close unterminated strings
+          // Try additional fixes - handle unterminated strings and arrays
+          // Close any unclosed brackets or braces
+          let openBraces = (fixedJson.match(/{/g) || []).length;
+          let closeBraces = (fixedJson.match(/}/g) || []).length;
+          for (let i = 0; i < openBraces - closeBraces; i++) {
+            fixedJson += "}";
+          }
+
+          let openBrackets = (fixedJson.match(/\[/g) || []).length;
+          let closeBrackets = (fixedJson.match(/\]/g) || []).length;
+          for (let i = 0; i < openBrackets - closeBrackets; i++) {
+            fixedJson += "]";
+          }
+
+          // Close unterminated strings
+          fixedJson = fixedJson.replace(/"([^"]*)$/g, '"');
+
           try {
             return JSON.parse(fixedJson);
           } catch {
             // Last resort - try eval (should be safe for simple JSON)
-            return new Function("return " + fixedJson)();
+            try {
+              return new Function("return " + fixedJson)();
+            } catch {
+              throw new Error("Failed to parse AI response as JSON");
+            }
           }
         }
       } catch {
