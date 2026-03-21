@@ -23,7 +23,7 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/login(.*)",
   "/signup(.*)",
-  "/api/session(.*)", // Allow session check without auth for now
+  "/api/session(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
