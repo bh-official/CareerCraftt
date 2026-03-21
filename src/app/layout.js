@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AnalysisProvider } from "@/context/AnalysisContext";
 import { ClerkProvider } from "@clerk/nextjs";
-import DevSignOutButton from "@/components/DevSignOutButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +27,6 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-gray-50">
-          <DevSignOutButton />
           <AnalysisProvider>{children}</AnalysisProvider>
         </body>
       </html>
