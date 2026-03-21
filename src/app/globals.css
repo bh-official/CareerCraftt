@@ -1,26 +1,243 @@
 @import "tailwindcss";
 
+/* ============================================
+   CSS VARIABLES - Theme Configuration
+   ============================================ */
 :root {
+  /* Primary Colors */
+  --primary-50: #f0f9ff;
+  --primary-100: #e0f2fe;
+  --primary-200: #bae6fd;
+  --primary-300: #7dd3fc;
+  --primary-400: #38bdf8;
+  --primary-500: #0ea5e9;
+  --primary-600: #0284c7;
+  --primary-700: #0369a1;
+  --primary-800: #075985;
+  --primary-900: #0c4a6e;
+
+  /* Semantic Colors */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Background Colors */
   --background: #ffffff;
-  --foreground: #171717;
+  --background-secondary: #f9fafb;
+  --background-tertiary: #f3f4f6;
+
+  /* Text Colors */
+  --foreground: #111827;
+  --foreground-secondary: #6b7280;
+  --foreground-muted: #9ca3af;
+
+  /* Border Colors */
+  --border-color: #e5e7eb;
+  --border-color-focus: #3b82f6;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
+/* ============================================
+   THEME CONFIGURATION - Tailwind v4
+   ============================================ */
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* ============================================
+   DARK MODE - Color Scheme
+   ============================================ */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --background-secondary: #111827;
+    --background-tertiary: #1f2937;
+    --foreground: #f9fafb;
+    --foreground-secondary: #9ca3af;
+    --foreground-muted: #6b7280;
+    --border-color: #374151;
   }
 }
 
+/* ============================================
+   BASE STYLES - Reset & Defaults
+   ============================================ */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   UTILITY CLASSES - Custom Utilities
+   ============================================ */
+
+/* Text Selection */
+::selection {
+  background-color: var(--primary-200);
+  color: var(--primary-900);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-secondary);
+}
+
+/* Focus Ring */
+*:focus-visible {
+  outline: 2px solid var(--border-color-focus);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   ANIMATIONS - Keyframes
+   ============================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   COMPONENT BASE STYLES
+   ============================================ */
+
+/* Card Styles */
+.card {
+  background-color: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-hover {
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.card-hover:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Button Base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input Base */
+.input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background-color: var(--background);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: var(--border-color-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ============================================
+   SCORE COLORS - Match Score Indicators
+   ============================================ */
+.score-strong {
+  color: #22c55e; /* Green - 80-100% */
+}
+
+.score-partial {
+  color: #eab308; /* Yellow - 50-79% */
+}
+
+.score-missing {
+  color: #ef4444; /* Red - 0-49% */
+}
+
+/* ============================================
+   GRADIENTS - Backgrounds
+   ============================================ */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+}
+
+.gradient-hero {
+  background: linear-gradient(to bottom right, #f0f9ff, #e0f2fe);
+}
+
+.gradient-dark {
+  background: linear-gradient(to bottom, #111827, #1f2937);
 }
