@@ -10,6 +10,7 @@ export default function FileUploader({
   maxSize = 5 * 1024 * 1024,
   disabled = false,
 }) {
+  const uploadId = `file-upload-${Math.random().toString(36).substr(2, 9)}`;
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
@@ -113,7 +114,17 @@ export default function FileUploader({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full" role="region" aria-label={label}>
+      {/* Screen reader announcement for status */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {uploading
+          ? "Uploading file..."
+          : error
+            ? `Error: ${error}`
+            : file
+              ? `File selected: ${file.name}`
+              : ""}
+      </div>
       {file ? (
         <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-3">
@@ -129,8 +140,9 @@ export default function FileUploader({
             onClick={removeFile}
             disabled={disabled}
             className="p-1 hover:bg-green-100 rounded transition-colors"
+            aria-label={`Remove file ${file.name}`}
           >
-            <X className="w-5 h-5 text-green-700" />
+            <X className="w-5 h-5 text-green-700" aria-hidden="true" />
           </button>
         </div>
       ) : (
@@ -147,6 +159,17 @@ export default function FileUploader({
             }
             ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           `}
+          role="button"
+          tabIndex={disabled ? -1 : 0}
+          aria-label={`${label}. ${isDragging ? "Drop file here" : "Click or drag to upload"}`}
+          aria-describedby={error ? `${uploadId}-error` : undefined}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              // Trigger file input click
+              document.getElementById(uploadId)?.click();
+            }
+          }}
         >
           <input
             type="file"
@@ -167,8 +190,15 @@ export default function FileUploader({
       )}
 
       {error && (
-        <div className="flex items-center gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+        <div
+          id={`${uploadId}-error`}
+          role="alert"
+          className="flex items-center gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg"
+        >
+          <AlertCircle
+            className="w-5 h-5 text-red-600 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
