@@ -4,13 +4,11 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
 // Dynamic import for the full-featured AnalysisPage component
+// ssr: false prevents prerender errors with useSearchParams
 const AnalysisPage = dynamic(() => import("@/components/AnalysisPage"), {
   ssr: false,
   loading: () => <AnalysisLoading />,
 });
-
-// Force dynamic rendering to prevent prerender errors
-export const dynamic = "force-dynamic";
 
 function AnalysisLoading() {
   return (
