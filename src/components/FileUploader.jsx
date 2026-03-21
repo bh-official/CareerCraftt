@@ -3,6 +3,22 @@
 import { useState, useCallback } from "react";
 import { Upload, FileText, X, AlertCircle, CheckCircle2 } from "lucide-react";
 
+/**
+ * FileUploader Component
+ *
+ * A drag-and-drop file upload component with validation,
+ * progress tracking, and accessibility features.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Function} props.onFileSelect - Callback when file is selected and processed
+ * @param {string} props.label - Label for the upload area
+ * @param {string} props.accept - Accepted file types (default: .pdf,.docx,.txt)
+ * @param {number} props.maxSize - Maximum file size in bytes (default: 5MB)
+ * @param {boolean} props.disabled - Whether the uploader is disabled
+ * @returns {JSX.Element} The FileUploader component
+ */
+
 export default function FileUploader({
   onFileSelect,
   label = "Upload file",
