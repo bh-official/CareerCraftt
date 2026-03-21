@@ -19,8 +19,7 @@ export default function SignupPage() {
               footerActionLink: "text-blue-600 hover:text-blue-700",
             },
           }}
-          routing="path"
-          path="/signup"
+          routing="hash"
           signInUrl="/login"
           redirectUrl="/dashboard"
         />
