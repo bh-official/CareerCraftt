@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import FileUploader from "@/components/FileUploader";
 import ScoreCard from "@/components/ScoreCard";
@@ -8,7 +8,10 @@ import GapList from "@/components/GapList";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
-export default function AnalysisPage() {
+// Force dynamic rendering to prevent prerender errors with useSearchParams
+export const dynamic = "force-dynamic";
+
+function AnalysisContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("id");
 
@@ -117,6 +120,7 @@ export default function AnalysisPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Loading skeleton while Suspense resolves */}
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -374,6 +378,39 @@ export default function AnalysisPage() {
             </div>
           </div>
         )}
+      </main>
+    </div>
+  );
+}
+
+// Wrapper component with Suspense boundary for useSearchParams
+export default function AnalysisPage() {
+  return (
+    <Suspense fallback={<AnalysisLoading />}>
+      <AnalysisContent />
+    </Suspense>
+  );
+}
+
+// Loading skeleton component
+function AnalysisLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="h-7 w-32 bg-gray-200 animate-pulse rounded"></div>
+            <span className="text-gray-500">/</span>
+            <div className="h-6 w-24 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 w-64 bg-gray-200 rounded"></div>
+          <div className="h-64 bg-gray-200 rounded-lg"></div>
+          <div className="h-64 bg-gray-200 rounded-lg"></div>
+        </div>
       </main>
     </div>
   );
