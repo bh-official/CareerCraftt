@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
-export default function InterviewPrepPage() {
+// Force dynamic rendering to prevent prerender errors with useSearchParams
+export const dynamic = "force-dynamic";
+
+function InterviewPrepContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
 
@@ -309,6 +312,32 @@ export default function InterviewPrepPage() {
             </div>
           </div>
         )}
+      </main>
+    </div>
+  );
+}
+
+// Wrapper component with Suspense boundary for useSearchParams
+export default function InterviewPrepPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <InterviewPrepContent />
+    </Suspense>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="h-7 w-32 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-64 bg-gray-200 rounded-lg"></div>
+        </div>
       </main>
     </div>
   );
