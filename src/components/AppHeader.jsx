@@ -12,12 +12,16 @@ export default function AppHeader() {
   const pathname = usePathname();
 
   const isFeaturesPage = pathname === "/features";
+  const brandHref = isLoaded && userId ? "/dashboard" : "/features";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between gap-6">
-          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+          <Link
+            href={brandHref}
+            className="flex items-center gap-2 min-w-0 shrink-0"
+          >
             <Logo size="sm" showText={false} />
             <span className="text-xl font-bold text-gray-900 whitespace-nowrap">
               CareerCraft
@@ -62,17 +66,17 @@ export default function AppHeader() {
                   href="/"
                   className="px-3 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
-                  Home
+                  Workspace
                 </Link>
                 <Link
-                  href="/analysis"
+                  href="/dashboard"
                   className="px-3 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
                   Dashboard
                 </Link>
                 <button
                   type="button"
-                  onClick={() => signOut({ redirectUrl: "/" })}
+                  onClick={() => signOut({ redirectUrl: "/features" })}
                   className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />

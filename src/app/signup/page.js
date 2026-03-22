@@ -23,7 +23,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (isLoaded && userId) {
-      router.push("/analysis");
+      router.push("/dashboard");
     }
   }, [isLoaded, userId, router]);
 
@@ -86,17 +86,17 @@ export default function SignupPage() {
             routing="path"
             path="/signup"
             signInUrl="/login"
-            redirectUrl="/analysis"
+            redirectUrl="/dashboard"
           />
         </div>
 
         {/* Back to Home */}
         <div className="text-center mt-6">
           <a
-            href="/"
+            href="/features"
             className="text-blue-200 hover:text-white transition-colors"
           >
-            ← Back to Home
+            ← Back to Features
           </a>
         </div>
       </motion.div>
