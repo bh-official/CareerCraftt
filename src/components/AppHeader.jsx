@@ -11,7 +11,6 @@ export default function AppHeader() {
   const { signOut } = useClerk();
   const pathname = usePathname();
 
-  const isFeaturesPage = pathname === "/features";
   const brandHref = isLoaded && userId ? "/dashboard" : "/features";
 
   return (
@@ -32,15 +31,6 @@ export default function AppHeader() {
             aria-label="Primary"
             className="ml-auto flex items-center gap-2 sm:gap-3 whitespace-nowrap"
           >
-            {!isFeaturesPage && (
-              <Link
-                href="/features"
-                className="px-3 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-              >
-                Features
-              </Link>
-            )}
-
             {(!isLoaded || !userId) && (
               <>
                 <Link
@@ -63,10 +53,10 @@ export default function AppHeader() {
             {isLoaded && userId && (
               <>
                 <Link
-                  href="/"
+                  href="/analysis"
                   className="px-3 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
-                  Workspace
+                  Analysis
                 </Link>
                 <Link
                   href="/dashboard"

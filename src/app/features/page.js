@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import {
   Sparkles,
   FileText,
@@ -74,15 +72,6 @@ export default function FeaturesPage() {
                 <p className="mt-2 text-sm text-gray-600">{description}</p>
               </article>
             ))}
-          </div>
-
-          <div className="mt-10">
-            <Link
-              href="/"
-              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-            >
-              Go to Current Landing Experience
-            </Link>
           </div>
         </section>
       </main>
