@@ -176,6 +176,14 @@ export function AnalysisProvider({ children }) {
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
+      console.info("[runAnalysis] Starting request", {
+        jobDescriptionLength: state.jobDescription?.length || 0,
+        resumeTextLength: state.resumeText?.length || 0,
+        companyName: state.companyName || null,
+        jobTitle: state.jobTitle || null,
+        sessionId: state.sessionId || null,
+      });
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -188,7 +196,27 @@ export function AnalysisProvider({ children }) {
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        console.error("[runAnalysis] Non-JSON response", {
+          status: response.status,
+          contentType: response.headers.get("content-type"),
+          bodyPreview: responseText?.slice(0, 300),
+        });
+        throw new Error(
+          `Unexpected server response (${response.status}). Check server logs for /api/analyze.`,
+        );
+      }
+
+      console.info("[runAnalysis] Response received", {
+        status: response.status,
+        success: data?.success,
+        error: data?.error || null,
+      });
 
       if (!data.success) {
         throw new Error(data.error || "Analysis failed");
