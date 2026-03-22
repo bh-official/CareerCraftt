@@ -21,6 +21,15 @@ import {
   Briefcase,
 } from "lucide-react";
 
+const TAB_PANEL_IDS = {
+  overview: "analysis-panel-overview",
+  "cover-letter": "analysis-panel-cover-letter",
+  gaps: "analysis-panel-gaps",
+  optimization: "analysis-panel-optimization",
+  interview: "analysis-panel-interview",
+  career: "analysis-panel-career",
+};
+
 /**
  * AnalysisPage Component
  *
@@ -174,11 +183,15 @@ export default function AnalysisPage() {
             />
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="job-description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Or paste job description
                 <span className="ml-2 text-xs text-gray-500">(required)</span>
               </label>
               <textarea
+                id="job-description"
                 value={jobDescription}
                 onChange={(e) => setInput({ jobDescription: e.target.value })}
                 placeholder="Paste the job description here..."
@@ -211,10 +224,14 @@ export default function AnalysisPage() {
 
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="company-name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Company Name
                 </label>
                 <input
+                  id="company-name"
                   type="text"
                   value={companyName}
                   onChange={(e) => setInput({ companyName: e.target.value })}
@@ -223,10 +240,14 @@ export default function AnalysisPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="job-title"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Position Title
                 </label>
                 <input
+                  id="job-title"
                   type="text"
                   value={jobTitle}
                   onChange={(e) => setInput({ jobTitle: e.target.value })}
@@ -250,11 +271,15 @@ export default function AnalysisPage() {
             />
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="resume-content"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Or paste resume content
                 <span className="ml-2 text-xs text-gray-500">(required)</span>
               </label>
               <textarea
+                id="resume-content"
                 value={resumeText}
                 onChange={(e) => setInput({ resumeText: e.target.value })}
                 placeholder="Paste your resume content here..."
@@ -286,6 +311,7 @@ export default function AnalysisPage() {
             <button
               onClick={handleAnalyze}
               disabled={!canAnalyze || isAnalyzing}
+              aria-busy={isAnalyzing}
               className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isAnalyzing ? (
@@ -305,7 +331,11 @@ export default function AnalysisPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+          >
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-red-900">Error</p>
@@ -317,6 +347,9 @@ export default function AnalysisPage() {
         {/* Results Section */}
         {analysis && (
           <>
+            <div aria-live="polite" className="sr-only">
+              Active section: {activeTab.replace("-", " ")}
+            </div>
             <Tabs
               activeTab={activeTab}
               onChange={setActiveTab}
@@ -334,7 +367,12 @@ export default function AnalysisPage() {
 
               {/* Overview Tab */}
               {activeTab === "overview" && (
-                <div className="space-y-6">
+                <section
+                  id={TAB_PANEL_IDS.overview}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-overview"
+                  className="space-y-6"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <OverallScoreCard score={analysis.overallScore} />
 
@@ -378,12 +416,16 @@ export default function AnalysisPage() {
                       />
                     </div>
                   )}
-                </div>
+                </section>
               )}
 
               {/* Cover Letter Tab */}
               {activeTab === "cover-letter" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS["cover-letter"]}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-cover-letter"
+                >
                   {!coverLetter && !isGenerating.coverLetter && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -419,22 +461,31 @@ export default function AnalysisPage() {
                       onSave={(content) => console.log("Saved:", content)}
                     />
                   )}
-                </div>
+                </section>
               )}
 
               {/* Gap Analysis Tab */}
               {activeTab === "gaps" && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <section
+                  id={TAB_PANEL_IDS.gaps}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-gaps"
+                  className="bg-white rounded-xl border border-gray-200 p-6"
+                >
                   <h3 className="font-semibold text-lg mb-4">
                     Skill Gap Analysis
                   </h3>
                   <GapList gaps={analysis.gapAnalysis} />
-                </div>
+                </section>
               )}
 
               {/* Optimization Tab */}
               {activeTab === "optimization" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS.optimization}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-optimization"
+                >
                   {!optimization && !isGenerating.optimization && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -465,12 +516,16 @@ export default function AnalysisPage() {
                   )}
 
                   {optimization && <OptimizationTips {...optimization} />}
-                </div>
+                </section>
               )}
 
               {/* Interview Prep Tab */}
               {activeTab === "interview" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS.interview}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-interview"
+                >
                   {!interviewPrep && !isGenerating.interview && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -500,12 +555,16 @@ export default function AnalysisPage() {
                   )}
 
                   {interviewPrep && <InterviewPrep {...interviewPrep} />}
-                </div>
+                </section>
               )}
 
               {/* Career Growth Tab */}
               {activeTab === "career" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS.career}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-career"
+                >
                   {!careerDevelopment && !isGenerating.career && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -537,7 +596,7 @@ export default function AnalysisPage() {
                   {careerDevelopment && (
                     <CareerDevelopment {...careerDevelopment} />
                   )}
-                </div>
+                </section>
               )}
             </div>
           </>
