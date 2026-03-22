@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
+import AppHeader from "@/components/AppHeader";
 
 // Dynamic import for the full-featured AnalysisPage component
 // ssr: false prevents prerender errors with useSearchParams
@@ -39,8 +40,13 @@ function AnalysisLoading() {
 
 export default function AnalysisPageWrapper() {
   return (
-    <Suspense fallback={<AnalysisLoading />}>
-      <AnalysisPage />
-    </Suspense>
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader />
+      <div className="pt-16">
+        <Suspense fallback={<AnalysisLoading />}>
+          <AnalysisPage />
+        </Suspense>
+      </div>
+    </div>
   );
 }

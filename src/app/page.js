@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import AppHeader from "@/components/AppHeader";
 import Logo from "@/components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogIn, UserPlus } from "lucide-react";
 
 /**
  * LandingPage Component
@@ -18,77 +16,6 @@ const AnalysisPage = dynamic(() => import("@/components/AnalysisPage"), {
   ssr: false,
   loading: () => null,
 });
-
-/**
- * Navigation Header
- * Shows auth buttons for signed-out users and user menu for signed-in users
- */
-function NavHeader() {
-  const { isLoaded, userId } = useAuth();
-
-  if (!isLoaded) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo size="sm" />
-              <span className="text-xl font-bold text-gray-900">
-                CareerCraft
-              </span>
-            </Link>
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <Logo size="sm" />
-            <span className="text-xl font-bold text-gray-900">CareerCraft</span>
-          </Link>
-
-          {/* Auth Buttons */}
-          <div className="flex items-center gap-4">
-            {!userId ? (
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
-                </Link>
-                <Link
-                  href="/signup"
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Sign Up
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/analysis"
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-                {/* Clerk UserButton will be added here after auth loads */}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 export default function LandingPage() {
   const [showContent, setShowContent] = useState(false);
@@ -192,7 +119,7 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <NavHeader />
+          <AppHeader />
           <div className="pt-16">
             <AnalysisPage />
           </div>
