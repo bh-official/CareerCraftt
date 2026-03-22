@@ -21,6 +21,23 @@ import {
   Briefcase,
 } from "lucide-react";
 
+/**
+ * AnalysisPage Component
+ *
+ * Main analysis interface that handles job application optimization through AI.
+ * Provides comprehensive tools for matching resumes to job descriptions.
+ *
+ * Architecture & Key Decisions:
+ * - Uses AnalysisContext for centralized state management across all tabs
+ * - File uploads are parsed client-side before context update
+ * - Each output type (cover letter, optimization, etc.) has dedicated generation handler
+ * - Tabs lazily render content based on activeTab state to reduce initial load
+ * - Error handling wraps async operations with try/catch and context error state
+ *
+ * @component
+ * @returns {JSX.Element} Main analysis interface with input forms and results tabs
+ */
+
 export default function AnalysisPage() {
   const {
     jobDescription,
@@ -48,6 +65,11 @@ export default function AnalysisPage() {
   const [jobFile, setJobFile] = useState(null);
   const [resumeFile, setResumeFile] = useState(null);
 
+  /**
+   * Handles job description file selection.
+   * Extracts text content from uploaded file and updates context.
+   * @param {Object} file - File object with text property from FileUploader
+   */
   const handleJobFileSelect = (file) => {
     setJobFile(file);
     if (file) {
@@ -55,6 +77,11 @@ export default function AnalysisPage() {
     }
   };
 
+  /**
+   * Handles resume file selection.
+   * Extracts text content from uploaded file and updates context.
+   * @param {Object} file - File object with text property from FileUploader
+   */
   const handleResumeFileSelect = (file) => {
     setResumeFile(file);
     if (file) {
@@ -102,6 +129,8 @@ export default function AnalysisPage() {
     }
   };
 
+  // Validation: minimum content required for meaningful analysis
+  // Both job description and resume must have at least 50 characters
   const canAnalyze = jobDescription.length > 50 && resumeText.length > 50;
 
   return (
@@ -242,6 +271,14 @@ export default function AnalysisPage() {
             />
 
             <div className="mt-6">
+              {/*
+               * Tab Content Rendering Pattern:
+               * Each tab follows a consistent three-state pattern:
+               * 1. Empty state with generate button (initial state)
+               * 2. Loading state with spinner (during generation)
+               * 3. Content display (after successful generation)
+               */}
+
               {/* Overview Tab */}
               {activeTab === "overview" && (
                 <div className="space-y-6">

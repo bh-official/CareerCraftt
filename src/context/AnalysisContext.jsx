@@ -2,6 +2,25 @@
 
 import { createContext, useContext, useReducer, useCallback } from "react";
 
+/**
+ * AnalysisContext - Global state management for the analysis feature
+ *
+ * Provides centralized state and actions for:
+ * - Job description and resume input (text and file)
+ * - Analysis results (scores, gaps, recommendations)
+ * - Generated content (cover letter, optimization tips, interview prep, career advice)
+ * - UI state (loading states, errors, active tab)
+ *
+ * Architecture:
+ * - Uses useReducer for predictable state transitions
+ * - Single source of truth avoids prop drilling across components
+ * - Separate generating flags allow parallel content generation
+ * - Session ID tracks analysis history for persistence
+ *
+ * @see {@link https://react.dev/learn/passing-data-deeply-with-context|React Context}
+ * @see {@link https://react.dev/reference/react/useReducer|useReducer hook}
+ */
+
 const AnalysisContext = createContext(null);
 
 const initialState = {
