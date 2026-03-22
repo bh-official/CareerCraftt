@@ -65,7 +65,7 @@ export default function LandingPage() {
               transition={{ delay: 0.8, duration: 0.5 }}
               className="mt-6 text-blue-200 text-lg md:text-xl font-medium"
             >
-              AI-Powered Career Success
+              Craft your path to the perfect job
             </motion.p>
 
             {/* Loading Indicator */}
