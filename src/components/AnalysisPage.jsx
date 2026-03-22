@@ -180,6 +180,8 @@ export default function AnalysisPage() {
             <FileUploader
               onFileSelect={handleJobFileSelect}
               label="Upload Job Description"
+              illustrationSrc="/temp_image.png"
+              illustrationAlt="Job description workflow diagram"
             />
 
             <div className="mt-4">

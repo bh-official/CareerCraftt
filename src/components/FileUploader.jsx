@@ -25,6 +25,8 @@ export default function FileUploader({
   accept = ".pdf,.docx,.txt",
   maxSize = 5 * 1024 * 1024,
   disabled = false,
+  illustrationSrc = null,
+  illustrationAlt = "",
 }) {
   const uploadId = `file-upload-${Math.random().toString(36).substr(2, 9)}`;
   const [isDragging, setIsDragging] = useState(false);
@@ -194,7 +196,15 @@ export default function FileUploader({
             disabled={disabled}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
-          <Upload className="w-10 h-10 mx-auto mb-4 text-gray-400" />
+          {illustrationSrc ? (
+            <img
+              src={illustrationSrc}
+              alt={illustrationAlt}
+              className="w-20 h-20 mx-auto mb-4 object-cover rounded-md border border-gray-200"
+            />
+          ) : (
+            <Upload className="w-10 h-10 mx-auto mb-4 text-gray-400" />
+          )}
           <p className="text-gray-700 font-medium">{label}</p>
           <p className="text-sm text-gray-500 mt-1">
             Drag and drop or click to browse
