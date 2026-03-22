@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { analyzeJobMatch } from "@/lib/aiService";
 import { query } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
+import { ensureUserRecord } from "@/lib/ensureUserRecord";
 
 export async function POST(request) {
   const { userId } = await auth();
@@ -14,6 +15,26 @@ export async function POST(request) {
   }
 
   try {
+    // Provision user rows up-front so session FK checks always pass
+    await ensureUserRecord(userId);
+
+    // Diagnostic log: which table does sessions.user_id currently reference?
+    const fkResult = await query(
+      `SELECT c.conname, cl.relname AS referenced_table
+       FROM pg_constraint c
+       JOIN pg_class t ON t.oid = c.conrelid
+       JOIN pg_namespace n ON n.oid = t.relnamespace
+       JOIN pg_class cl ON cl.oid = c.confrelid
+       WHERE c.contype = 'f'
+         AND n.nspname = 'public'
+         AND t.relname = 'sessions'
+         AND c.conname = 'sessions_user_id_fkey'`,
+    );
+    console.info("[analyze] sessions_user_id_fkey target", {
+      userId,
+      fkTarget: fkResult.rows[0]?.referenced_table || "unknown",
+    });
+
     const body = await request.json();
     const { jobDescription, resumeText, companyName, jobTitle, sessionId } =
       body;

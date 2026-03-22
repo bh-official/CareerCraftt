@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
+import { ensureUserRecord } from "@/lib/ensureUserRecord";
 
 /**
  * Authentication helper - validates user is authenticated
@@ -111,6 +112,8 @@ export async function POST(request) {
   const { userId } = authResult;
 
   try {
+    await ensureUserRecord(userId);
+
     const body = await request.json();
     const { name, jobDescription, resumeText, companyName, jobTitle } = body;
 
