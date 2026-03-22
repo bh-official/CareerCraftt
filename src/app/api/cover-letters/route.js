@@ -1,5 +1,33 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
+
+/**
+ * Authentication helper
+ */
+async function requireAuth() {
+  const { userId } = await auth();
+  if (!userId) {
+    return {
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+  return { userId };
+}
+
+/**
+ * Validates user has access to the session
+ */
+async function validateAccess(sessionId, userId) {
+  if (!sessionId) return false;
+  const result = await query(
+    `SELECT s.id FROM sessions s
+     LEFT JOIN team_members tm ON tm.session_id = s.id
+     WHERE s.id = $1 AND (s.user_id = $2 OR tm.user_id = $2)`,
+    [sessionId, userId],
+  );
+  return result.rows.length > 0;
+}
 
 /**
  * Cover Letters API

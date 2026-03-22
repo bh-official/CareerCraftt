@@ -1,8 +1,62 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
+
+/**
+ * Authentication helper - validates user is authenticated
+ * @returns {Object} { userId, error } - userId if authenticated, error response if not
+ */
+async function requireAuth() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return {
+      error: NextResponse.json(
+        { error: "Unauthorized - Authentication required" },
+        { status: 401 },
+      ),
+    };
+  }
+
+  return { userId };
+}
+
+/**
+ * Validates user owns the session or is a team member
+ * @param {string} sessionId - The session ID to check
+ * @param {string} userId - The user ID to validate
+ * @returns {boolean} True if user has access
+ */
+async function validateSessionAccess(sessionId, userId) {
+  // Check if user owns the session
+  const ownerCheck = await query(
+    "SELECT id FROM sessions WHERE id = $1 AND (user_id = $2 OR user_id IS NULL)",
+    [sessionId, userId],
+  );
+
+  if (ownerCheck.rows.length > 0) {
+    return true;
+  }
+
+  // Check if user is a team member with access
+  const teamCheck = await query(
+    `SELECT tm.id FROM team_members tm
+     JOIN sessions s ON s.id = tm.session_id
+     WHERE tm.session_id = $1 AND tm.user_id = $2`,
+    [sessionId, userId],
+  );
+
+  return teamCheck.rows.length > 0;
+}
 
 // Get session by ID
 export async function GET(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
+  const { userId } = authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("id");
@@ -11,6 +65,18 @@ export async function GET(request) {
       return NextResponse.json(
         { error: "Session ID is required" },
         { status: 400 },
+      );
+    }
+
+    // Validate user has access to this session
+    const hasAccess = await validateSessionAccess(sessionId, userId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Access denied - You don't have permission to view this session",
+        },
+        { status: 403 },
       );
     }
 
@@ -51,13 +117,19 @@ export async function GET(request) {
 
 // Create new session
 export async function POST(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
+  const { userId } = authResult;
+
   try {
     const body = await request.json();
     const { name, jobDescription, resumeText, companyName, jobTitle } = body;
 
     const result = await query(
-      `INSERT INTO sessions (name, job_description, resume_text, company_name, job_title)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO sessions (name, job_description, resume_text, company_name, job_title, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
         name || "New Analysis",
@@ -65,6 +137,7 @@ export async function POST(request) {
         resumeText,
         companyName,
         jobTitle,
+        userId, // Associate session with authenticated user
       ],
     );
 
@@ -87,6 +160,12 @@ export async function POST(request) {
  * PATCH - Partially update a session
  */
 export async function PUT(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
+  const { userId } = authResult;
+
   try {
     const body = await request.json();
     const {
@@ -106,33 +185,45 @@ export async function PUT(request) {
       );
     }
 
+    // Validate user has access to this session
+    const hasAccess = await validateSessionAccess(id, userId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Access denied - You don't have permission to modify this session",
+        },
+        { status: 403 },
+      );
+    }
+
     // Build dynamic update query
     const updates = [];
     const values = [];
     let paramIndex = 1;
 
     if (name !== undefined) {
-      updates.push(`name = ${paramIndex++}`);
+      updates.push(`name = $${paramIndex++}`);
       values.push(name);
     }
     if (jobDescription !== undefined) {
-      updates.push(`job_description = ${paramIndex++}`);
+      updates.push(`job_description = $${paramIndex++}`);
       values.push(jobDescription);
     }
     if (resumeText !== undefined) {
-      updates.push(`resume_text = ${paramIndex++}`);
+      updates.push(`resume_text = $${paramIndex++}`);
       values.push(resumeText);
     }
     if (companyName !== undefined) {
-      updates.push(`company_name = ${paramIndex++}`);
+      updates.push(`company_name = $${paramIndex++}`);
       values.push(companyName);
     }
     if (jobTitle !== undefined) {
-      updates.push(`job_title = ${paramIndex++}`);
+      updates.push(`job_title = $${paramIndex++}`);
       values.push(jobTitle);
     }
     if (status !== undefined) {
-      updates.push(`status = ${paramIndex++}`);
+      updates.push(`status = $${paramIndex++}`);
       values.push(status);
     }
 
@@ -147,7 +238,7 @@ export async function PUT(request) {
 
     const result = await query(
       `UPDATE sessions SET ${updates.join(", ")}, updated_at = NOW() 
-       WHERE id = ${paramIndex} RETURNING *`,
+       WHERE id = $${paramIndex} RETURNING *`,
       values,
     );
 
@@ -170,6 +261,12 @@ export async function PUT(request) {
 
 // Delete session
 export async function DELETE(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+
+  const { userId } = authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("id");
@@ -178,6 +275,18 @@ export async function DELETE(request) {
       return NextResponse.json(
         { error: "Session ID is required" },
         { status: 400 },
+      );
+    }
+
+    // Validate user has access to this session
+    const hasAccess = await validateSessionAccess(sessionId, userId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Access denied - You don't have permission to delete this session",
+        },
+        { status: 403 },
       );
     }
 

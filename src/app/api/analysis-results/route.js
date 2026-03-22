@@ -1,5 +1,40 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
+
+/**
+ * Authentication helper - validates user is authenticated
+ */
+async function requireAuth() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return {
+      error: NextResponse.json(
+        { error: "Unauthorized - Authentication required" },
+        { status: 401 },
+      ),
+    };
+  }
+
+  return { userId };
+}
+
+/**
+ * Validates user has access to the session associated with the analysis
+ */
+async function validateAccess(sessionId, userId) {
+  if (!sessionId) return false;
+
+  const result = await query(
+    `SELECT s.id FROM sessions s
+     LEFT JOIN team_members tm ON tm.session_id = s.id
+     WHERE s.id = $1 AND (s.user_id = $2 OR tm.user_id = $2)`,
+    [sessionId, userId],
+  );
+
+  return result.rows.length > 0;
+}
 
 /**
  * Analysis Results API
@@ -9,10 +44,17 @@ import { query } from "@/lib/db";
  * - POST: Create new analysis results
  * - PUT: Update existing analysis results
  * - DELETE: Delete analysis results
+ *
+ * All operations require authentication and ownership/team access
  */
 
 // GET - Retrieve analysis results by session ID
 export async function GET(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { userId } = authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("session_id");
@@ -62,10 +104,29 @@ export async function GET(request) {
 
 // POST - Create new analysis results
 export async function POST(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { userId } = authResult;
+
   try {
     const body = await request.json();
+    const { session_id } = body;
+
+    // Validate access to session
+    const hasAccess = await validateAccess(session_id, userId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Access denied - You don't have permission to add analysis to this session",
+        },
+        { status: 403 },
+      );
+    }
+
     const {
-      session_id,
+      session_id: _session_id,
       overall_score,
       skills_score,
       skills_confidence,
@@ -135,9 +196,26 @@ export async function POST(request) {
 
 // PUT - Update analysis results
 export async function PUT(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { userId } = authResult;
+
   try {
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id, session_id, ...updates } = body;
+
+    // Validate access to session
+    const hasAccess = await validateAccess(session_id, userId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Access denied - You don't have permission to modify this analysis",
+        },
+        { status: 403 },
+      );
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -227,9 +305,27 @@ export async function PUT(request) {
 
 // DELETE - Delete analysis results
 export async function DELETE(request) {
+  // Require authentication
+  const authResult = await requireAuth();
+  if (authResult.error) return authResult.error;
+  const { userId } = authResult;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const sessionId = searchParams.get("session_id");
+
+    // Validate access to session
+    const hasAccess = await validateAccess(sessionId, userId);
+    if (!hasAccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Access denied - You don't have permission to delete this analysis",
+        },
+        { status: 403 },
+      );
+    }
 
     if (!id) {
       return NextResponse.json(
