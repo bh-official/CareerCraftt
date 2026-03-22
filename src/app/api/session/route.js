@@ -81,6 +81,93 @@ export async function POST(request) {
   }
 }
 
+// Update session
+/**
+ * PUT - Update an existing session
+ * PATCH - Partially update a session
+ */
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const {
+      id,
+      name,
+      jobDescription,
+      resumeText,
+      companyName,
+      jobTitle,
+      status,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Session ID is required" },
+        { status: 400 },
+      );
+    }
+
+    // Build dynamic update query
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = ${paramIndex++}`);
+      values.push(name);
+    }
+    if (jobDescription !== undefined) {
+      updates.push(`job_description = ${paramIndex++}`);
+      values.push(jobDescription);
+    }
+    if (resumeText !== undefined) {
+      updates.push(`resume_text = ${paramIndex++}`);
+      values.push(resumeText);
+    }
+    if (companyName !== undefined) {
+      updates.push(`company_name = ${paramIndex++}`);
+      values.push(companyName);
+    }
+    if (jobTitle !== undefined) {
+      updates.push(`job_title = ${paramIndex++}`);
+      values.push(jobTitle);
+    }
+    if (status !== undefined) {
+      updates.push(`status = ${paramIndex++}`);
+      values.push(status);
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json(
+        { error: "No fields to update" },
+        { status: 400 },
+      );
+    }
+
+    values.push(id);
+
+    const result = await query(
+      `UPDATE sessions SET ${updates.join(", ")}, updated_at = NOW() 
+       WHERE id = ${paramIndex} RETURNING *`,
+      values,
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      session: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Update session error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to update session" },
+      { status: 500 },
+    );
+  }
+}
+
 // Delete session
 export async function DELETE(request) {
   try {
