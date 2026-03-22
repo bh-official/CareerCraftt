@@ -80,6 +80,10 @@ export const metadata = {
   },
   category: "technology",
   classification: "Career & Job Search Tools",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export const viewport = {
