@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { analyzeJobMatch } from "@/lib/aiService";
 import { query } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Unauthorized - Authentication required" },
+      { status: 401 },
+    );
+  }
+
   try {
     const body = await request.json();
     const { jobDescription, resumeText, companyName, jobTitle, sessionId } =
@@ -27,26 +37,35 @@ export async function POST(request) {
         (analysis.additional?.score || 0) * 0.1,
     );
 
-    // Create or update session in database
-    let sessionResult;
+    // Create or update session in database (scoped to authenticated user)
+    let newSessionId;
     if (sessionId) {
-      await query(
+      const updateResult = await query(
         `UPDATE sessions 
          SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, updated_at = NOW()
-         WHERE id = $5`,
-        [jobDescription, resumeText, companyName, jobTitle, sessionId],
-      );
-      sessionResult = { id: sessionId };
-    } else {
-      sessionResult = await query(
-        `INSERT INTO sessions (job_description, resume_text, company_name, job_title) 
-         VALUES ($1, $2, $3, $4) 
+         WHERE id = $5 AND user_id = $6
          RETURNING id`,
-        [jobDescription, resumeText, companyName, jobTitle],
+        [jobDescription, resumeText, companyName, jobTitle, sessionId, userId],
       );
-    }
 
-    const newSessionId = sessionResult.id || sessionId;
+      if (updateResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: "Session not found or access denied" },
+          { status: 403 },
+        );
+      }
+
+      newSessionId = updateResult.rows[0].id;
+    } else {
+      const insertResult = await query(
+        `INSERT INTO sessions (job_description, resume_text, company_name, job_title, user_id) 
+         VALUES ($1, $2, $3, $4, $5) 
+         RETURNING id`,
+        [jobDescription, resumeText, companyName, jobTitle, userId],
+      );
+
+      newSessionId = insertResult.rows[0].id;
+    }
 
     // Save analysis results
     await query(
@@ -55,7 +74,24 @@ export async function POST(request) {
         experience_score, experience_confidence, education_score, education_confidence,
         keywords_score, keywords_confidence, additional_score, additional_confidence,
         gap_analysis, matched_requirements, unmatched_requirements, partial_matches
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ON CONFLICT (session_id)
+      DO UPDATE SET
+        overall_score = EXCLUDED.overall_score,
+        skills_score = EXCLUDED.skills_score,
+        skills_confidence = EXCLUDED.skills_confidence,
+        experience_score = EXCLUDED.experience_score,
+        experience_confidence = EXCLUDED.experience_confidence,
+        education_score = EXCLUDED.education_score,
+        education_confidence = EXCLUDED.education_confidence,
+        keywords_score = EXCLUDED.keywords_score,
+        keywords_confidence = EXCLUDED.keywords_confidence,
+        additional_score = EXCLUDED.additional_score,
+        additional_confidence = EXCLUDED.additional_confidence,
+        gap_analysis = EXCLUDED.gap_analysis,
+        matched_requirements = EXCLUDED.matched_requirements,
+        unmatched_requirements = EXCLUDED.unmatched_requirements,
+        partial_matches = EXCLUDED.partial_matches`,
       [
         newSessionId,
         weightedScore,

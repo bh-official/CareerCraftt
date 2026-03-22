@@ -32,14 +32,21 @@ export default function DashboardPage() {
         setError("");
         const response = await fetch("/api/sessions?limit=100&offset=0", {
           cache: "no-store",
+          credentials: "include",
         });
+
+        if (response.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
         const data = await response.json();
 
         if (!response.ok || !data?.success) {
           throw new Error(data?.error || "Failed to load applications");
         }
 
-        setSessions(data.sessions || []);
+        setSessions(Array.isArray(data.sessions) ? data.sessions : []);
       } catch (err) {
         setError(err.message || "Unable to load applications");
       } finally {

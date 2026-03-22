@@ -79,18 +79,15 @@ export async function GET(request) {
     // Filters
     const hasScore = searchParams.get("has_score");
 
-    // Build WHERE clause dynamically
-    const whereConditions = [
-      "s.is_active = true",
-      "(s.user_id = $1 OR tm.user_id = $1)",
-    ];
+    // Build WHERE clause dynamically (strict user ownership)
+    const whereConditions = ["s.is_active = true", "s.user_id = $1"];
     const params = [userId];
     let paramIndex = 2;
 
     // Add search condition
     if (search) {
       whereConditions.push(
-        `(s.name ILIKE ${paramIndex} OR s.company_name ILIKE ${paramIndex} OR s.job_title ILIKE ${paramIndex})`,
+        `(s.name ILIKE $${paramIndex} OR s.company_name ILIKE $${paramIndex} OR s.job_title ILIKE $${paramIndex})`,
       );
       params.push(`%${search}%`);
       paramIndex++;
@@ -111,10 +108,9 @@ export async function GET(request) {
         ar.overall_score
       FROM sessions s
       LEFT JOIN analysis_results ar ON ar.session_id = s.id
-      LEFT JOIN team_members tm ON tm.session_id = s.id
       WHERE ${whereClause}
       ORDER BY ${sort} ${order}
-      LIMIT ${paramIndex} OFFSET ${paramIndex + 1}`,
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
       [...params, limit, offset],
     );
 
@@ -123,7 +119,6 @@ export async function GET(request) {
       `SELECT COUNT(DISTINCT s.id) 
        FROM sessions s
        LEFT JOIN analysis_results ar ON ar.session_id = s.id
-       LEFT JOIN team_members tm ON tm.session_id = s.id
        WHERE ${whereClause}`,
       params,
     );

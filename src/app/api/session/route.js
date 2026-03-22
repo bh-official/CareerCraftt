@@ -28,25 +28,12 @@ async function requireAuth() {
  * @returns {boolean} True if user has access
  */
 async function validateSessionAccess(sessionId, userId) {
-  // Check if user owns the session
   const ownerCheck = await query(
-    "SELECT id FROM sessions WHERE id = $1 AND (user_id = $2 OR user_id IS NULL)",
+    "SELECT id FROM sessions WHERE id = $1 AND user_id = $2",
     [sessionId, userId],
   );
 
-  if (ownerCheck.rows.length > 0) {
-    return true;
-  }
-
-  // Check if user is a team member with access
-  const teamCheck = await query(
-    `SELECT tm.id FROM team_members tm
-     JOIN sessions s ON s.id = tm.session_id
-     WHERE tm.session_id = $1 AND tm.user_id = $2`,
-    [sessionId, userId],
-  );
-
-  return teamCheck.rows.length > 0;
+  return ownerCheck.rows.length > 0;
 }
 
 // Get session by ID
@@ -91,11 +78,11 @@ export async function GET(request) {
       FROM sessions s
       LEFT JOIN analysis_results ar ON ar.session_id = s.id
       LEFT JOIN cover_letters cl ON cl.session_id = s.id
-      LEFT JOIN application_optimizations ao ON ao.session_id = s.id
-      LEFT JOIN interview_prep ip ON ip.session_id = s.id
-      LEFT JOIN career_development cd ON cd.session_id = s.id
-      WHERE s.id = $1`,
-      [sessionId],
+       LEFT JOIN application_optimizations ao ON ao.session_id = s.id
+       LEFT JOIN interview_prep ip ON ip.session_id = s.id
+       LEFT JOIN career_development cd ON cd.session_id = s.id
+       WHERE s.id = $1 AND s.user_id = $2`,
+      [sessionId, userId],
     );
 
     if (result.rows.length === 0) {
@@ -235,10 +222,11 @@ export async function PUT(request) {
     }
 
     values.push(id);
+    values.push(userId);
 
     const result = await query(
       `UPDATE sessions SET ${updates.join(", ")}, updated_at = NOW() 
-       WHERE id = $${paramIndex} RETURNING *`,
+       WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1} RETURNING *`,
       values,
     );
 
@@ -290,7 +278,17 @@ export async function DELETE(request) {
       );
     }
 
-    await query("DELETE FROM sessions WHERE id = $1", [sessionId]);
+    const deleteResult = await query(
+      "DELETE FROM sessions WHERE id = $1 AND user_id = $2 RETURNING id",
+      [sessionId, userId],
+    );
+
+    if (deleteResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: "Session not found or access denied" },
+        { status: 404 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
