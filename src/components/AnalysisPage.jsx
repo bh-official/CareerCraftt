@@ -129,9 +129,27 @@ export default function AnalysisPage() {
     }
   };
 
-  // Validation: minimum content required for meaningful analysis
-  // Both job description and resume must have at least 50 characters
-  const canAnalyze = jobDescription.length > 50 && resumeText.length > 50;
+  // Validation constants
+  const MIN_CONTENT_LENGTH = 50;
+
+  // Validation states for real-time feedback
+  const jobDescriptionValid = jobDescription.length >= MIN_CONTENT_LENGTH;
+  const resumeValid = resumeText.length >= MIN_CONTENT_LENGTH;
+  const canAnalyze = jobDescriptionValid && resumeValid;
+
+  // Helper function to get character count color
+  const getCharCountColor = (length, min) => {
+    if (length === 0) return "text-gray-400";
+    if (length < min) return "text-amber-600";
+    return "text-green-600";
+  };
+
+  // Helper function for validation message
+  const getValidationMessage = (length, min) => {
+    if (length === 0) return `${min} characters minimum required`;
+    if (length < min) return `${min - length} more characters needed`;
+    return "Good length";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -168,13 +186,37 @@ export default function AnalysisPage() {
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Or paste job description
+                <span className="ml-2 text-xs text-gray-500">(required)</span>
               </label>
               <textarea
                 value={jobDescription}
                 onChange={(e) => setInput({ jobDescription: e.target.value })}
                 placeholder="Paste the job description here..."
-                className="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                aria-describedby="job-description-hint"
+                className={`w-full h-48 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                  jobDescription.length > 0 && !jobDescriptionValid
+                    ? "border-amber-300 bg-amber-50"
+                    : jobDescriptionValid
+                      ? "border-green-300"
+                      : "border-gray-300"
+                }`}
+                required
+                minLength={MIN_CONTENT_LENGTH}
               />
+              <div className="mt-1 flex items-center justify-between">
+                <span
+                  id="job-description-hint"
+                  className={`text-xs ${getCharCountColor(jobDescription.length, MIN_CONTENT_LENGTH)}`}
+                >
+                  {getValidationMessage(
+                    jobDescription.length,
+                    MIN_CONTENT_LENGTH,
+                  )}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {jobDescription.length}/{MIN_CONTENT_LENGTH} characters
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -220,13 +262,34 @@ export default function AnalysisPage() {
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Or paste resume content
+                <span className="ml-2 text-xs text-gray-500">(required)</span>
               </label>
               <textarea
                 value={resumeText}
                 onChange={(e) => setInput({ resumeText: e.target.value })}
                 placeholder="Paste your resume content here..."
-                className="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                aria-describedby="resume-hint"
+                className={`w-full h-48 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
+                  resumeText.length > 0 && !resumeValid
+                    ? "border-amber-300 bg-amber-50"
+                    : resumeValid
+                      ? "border-green-300"
+                      : "border-gray-300"
+                }`}
+                required
+                minLength={MIN_CONTENT_LENGTH}
               />
+              <div className="mt-1 flex items-center justify-between">
+                <span
+                  id="resume-hint"
+                  className={`text-xs ${getCharCountColor(resumeText.length, MIN_CONTENT_LENGTH)}`}
+                >
+                  {getValidationMessage(resumeText.length, MIN_CONTENT_LENGTH)}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {resumeText.length}/{MIN_CONTENT_LENGTH} characters
+                </span>
+              </div>
             </div>
 
             {/* Analyze Button */}
