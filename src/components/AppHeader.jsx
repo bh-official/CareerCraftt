@@ -19,7 +19,10 @@ export default function AppHeader() {
         {/* Desktop and Mobile Header Bar */}
         <div className="h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0 flex-shrink-0">
+          <Link
+            href="/"
+            className="flex items-center gap-2 min-w-0 shrink-0 flex-shrink-0"
+          >
             <Logo size="sm" showText={false} />
             <span className="text-lg sm:text-xl font-bold text-gray-900 whitespace-nowrap">
               CareerCraft
@@ -53,7 +56,7 @@ export default function AppHeader() {
             {isLoaded && userId && (
               <>
                 <Link
-                  href="/analysis"
+                  href="/analysis?new=1"
                   className="px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
                   Analysis
@@ -123,7 +126,7 @@ export default function AppHeader() {
               {isLoaded && userId && (
                 <>
                   <Link
-                    href="/analysis"
+                    href="/analysis?new=1"
                     onClick={closeMenu}
                     className="block w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
                   >

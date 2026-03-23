@@ -1,8 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import nextDynamic from "next/dynamic";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
+import { useAnalysis } from "@/context/AnalysisContext";
 
 // Prevent static prerender/export for this authenticated, client-driven route
 export const dynamic = "force-dynamic";
@@ -42,6 +44,52 @@ function AnalysisLoading() {
 }
 
 export default function AnalysisPageWrapper() {
+  const { reset } = useAnalysis();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const keysToClear = [
+      "analysisSessionId",
+      "analysisContext",
+      "analysisDraft",
+      "applicationId",
+      "sessionId",
+    ];
+
+    for (const key of keysToClear) {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/analysis") return;
+
+    const hasStaleSessionParam =
+      searchParams.has("id") ||
+      searchParams.has("sessionId") ||
+      searchParams.has("applicationId");
+    const isExplicitNew = searchParams.get("new") === "1";
+
+    if (hasStaleSessionParam) {
+      reset();
+      router.replace("/analysis?new=1");
+      return;
+    }
+
+    if (isExplicitNew || !searchParams.toString()) {
+      reset();
+
+      if (!isExplicitNew) {
+        router.replace("/analysis?new=1");
+      }
+    }
+  }, [pathname, reset, router, searchParams]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader />

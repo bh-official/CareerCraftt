@@ -297,7 +297,7 @@ export default function DashboardPage() {
 
             <div className="flex items-center gap-3">
               <Link
-                href="/analysis"
+                href="/analysis?new=1"
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
