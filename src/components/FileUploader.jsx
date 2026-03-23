@@ -3,6 +3,22 @@
 import { useState, useCallback } from "react";
 import { Upload, FileText, X, AlertCircle, CheckCircle2 } from "lucide-react";
 
+/**
+ * FileUploader Component
+ *
+ * A drag-and-drop file upload component with validation,
+ * progress tracking, and accessibility features.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Function} props.onFileSelect - Callback when file is selected and processed
+ * @param {string} props.label - Label for the upload area
+ * @param {string} props.accept - Accepted file types (default: .pdf,.docx,.txt)
+ * @param {number} props.maxSize - Maximum file size in bytes (default: 5MB)
+ * @param {boolean} props.disabled - Whether the uploader is disabled
+ * @returns {JSX.Element} The FileUploader component
+ */
+
 export default function FileUploader({
   onFileSelect,
   label = "Upload file",
@@ -10,6 +26,7 @@ export default function FileUploader({
   maxSize = 5 * 1024 * 1024,
   disabled = false,
 }) {
+  const uploadId = `file-upload-${Math.random().toString(36).substr(2, 9)}`;
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
@@ -113,13 +130,23 @@ export default function FileUploader({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full" role="region" aria-label={label}>
+      {/* Screen reader announcement for status */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {uploading
+          ? "Uploading file..."
+          : error
+            ? `Error: ${error}`
+            : file
+              ? `File selected: ${file.name}`
+              : ""}
+      </div>
       {file ? (
-        <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <div>
-              <p className="font-medium text-green-900">{file.name}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium text-green-900 truncate">{file.name}</p>
               <p className="text-sm text-green-700">
                 {uploading ? "Processing..." : "Ready"}
               </p>
@@ -128,9 +155,10 @@ export default function FileUploader({
           <button
             onClick={removeFile}
             disabled={disabled}
-            className="p-1 hover:bg-green-100 rounded transition-colors"
+            className="p-1 hover:bg-green-100 rounded transition-colors self-end sm:self-auto"
+            aria-label={`Remove file ${file.name}`}
           >
-            <X className="w-5 h-5 text-green-700" />
+            <X className="w-5 h-5 text-green-700" aria-hidden="true" />
           </button>
         </div>
       ) : (
@@ -139,7 +167,7 @@ export default function FileUploader({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           className={`
-            relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
+            relative border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors
             ${
               isDragging
                 ? "border-blue-500 bg-blue-50"
@@ -147,17 +175,31 @@ export default function FileUploader({
             }
             ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           `}
+          role="button"
+          tabIndex={disabled ? -1 : 0}
+          aria-label={`${label}. ${isDragging ? "Drop file here" : "Click or drag to upload"}`}
+          aria-describedby={error ? `${uploadId}-error` : undefined}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              // Trigger file input click
+              document.getElementById(uploadId)?.click();
+            }
+          }}
         >
           <input
             type="file"
+            id={uploadId}
             accept={accept}
             onChange={handleInputChange}
             disabled={disabled}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
-          <Upload className="w-10 h-10 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-700 font-medium">{label}</p>
-          <p className="text-sm text-gray-500 mt-1">
+
+          <Upload className="w-8 sm:w-10 h-8 sm:h-10 mx-auto mb-3 sm:mb-4 text-gray-400" />
+
+          <p className="text-sm sm:text-base text-gray-700 font-medium">{label}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Drag and drop or click to browse
           </p>
           <p className="text-xs text-gray-400 mt-2">
@@ -167,8 +209,15 @@ export default function FileUploader({
       )}
 
       {error && (
-        <div className="flex items-center gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+        <div
+          id={`${uploadId}-error`}
+          role="alert"
+          className="flex items-center gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg"
+        >
+          <AlertCircle
+            className="w-5 h-5 text-red-600 flex-shrink-0"
+            aria-hidden="true"
+          />
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}

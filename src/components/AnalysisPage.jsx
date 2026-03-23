@@ -18,8 +18,34 @@ import {
   Send,
   FileText,
   Building,
-  Briefcase,
+  ClipboardList,
 } from "lucide-react";
+
+const TAB_PANEL_IDS = {
+  overview: "analysis-panel-overview",
+  "cover-letter": "analysis-panel-cover-letter",
+  gaps: "analysis-panel-gaps",
+  optimization: "analysis-panel-optimization",
+  interview: "analysis-panel-interview",
+  career: "analysis-panel-career",
+};
+
+/**
+ * AnalysisPage Component
+ *
+ * Main analysis interface that handles job application optimization through AI.
+ * Provides comprehensive tools for matching resumes to job descriptions.
+ *
+ * Architecture & Key Decisions:
+ * - Uses AnalysisContext for centralized state management across all tabs
+ * - File uploads are parsed client-side before context update
+ * - Each output type (cover letter, optimization, etc.) has dedicated generation handler
+ * - Tabs lazily render content based on activeTab state to reduce initial load
+ * - Error handling wraps async operations with try/catch and context error state
+ *
+ * @component
+ * @returns {JSX.Element} Main analysis interface with input forms and results tabs
+ */
 
 export default function AnalysisPage() {
   const {
@@ -48,6 +74,11 @@ export default function AnalysisPage() {
   const [jobFile, setJobFile] = useState(null);
   const [resumeFile, setResumeFile] = useState(null);
 
+  /**
+   * Handles job description file selection.
+   * Extracts text content from uploaded file and updates context.
+   * @param {Object} file - File object with text property from FileUploader
+   */
   const handleJobFileSelect = (file) => {
     setJobFile(file);
     if (file) {
@@ -55,6 +86,11 @@ export default function AnalysisPage() {
     }
   };
 
+  /**
+   * Handles resume file selection.
+   * Extracts text content from uploaded file and updates context.
+   * @param {Object} file - File object with text property from FileUploader
+   */
   const handleResumeFileSelect = (file) => {
     setResumeFile(file);
     if (file) {
@@ -102,27 +138,42 @@ export default function AnalysisPage() {
     }
   };
 
-  const canAnalyze = jobDescription.length > 50 && resumeText.length > 50;
+  // Validation constants
+  const MIN_CONTENT_LENGTH = 50;
+
+  // Validation states for real-time feedback
+  const jobDescriptionValid = jobDescription.length >= MIN_CONTENT_LENGTH;
+  const resumeValid = resumeText.length >= MIN_CONTENT_LENGTH;
+  const canAnalyze = jobDescriptionValid && resumeValid;
+
+  // Helper function to get character count color
+  const getCharCountColor = (length, min) => {
+    if (length === 0) return "text-gray-400";
+    if (length < min) return "text-amber-600";
+    return "text-green-600";
+  };
+
+  // Helper function for validation message
+  const getValidationMessage = (length, min) => {
+    if (length === 0) return `${min} characters minimum required`;
+    if (length < min) return `${min - length} more characters needed`;
+    return "Good length";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">CareerCraft</h1>
-          <p className="text-sm text-gray-600">
-            AI-Powered Job Application Assistant
-          </p>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main
+        id="main-content"
+        className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6"
+        role="main"
+        tabIndex="-1"
+      >
         {/* Input Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Job Description Input */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Briefcase className="w-5 h-5 text-blue-600" />
+              <ClipboardList className="w-5 h-5 text-blue-600" />
               <h2 className="font-semibold text-gray-900">Job Description</h2>
             </div>
 
@@ -132,40 +183,76 @@ export default function AnalysisPage() {
             />
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="job-description"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Or paste job description
+                <span className="ml-2 text-xs text-gray-500">(required)</span>
               </label>
               <textarea
+                id="job-description"
                 value={jobDescription}
                 onChange={(e) => setInput({ jobDescription: e.target.value })}
                 placeholder="Paste the job description here..."
-                className="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                aria-describedby="job-description-hint"
+                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                  jobDescription.length > 0 && !jobDescriptionValid
+                    ? "border-amber-300 bg-amber-50"
+                    : jobDescriptionValid
+                      ? "border-green-300"
+                      : "border-gray-300"
+                }`}
+                required
+                minLength={MIN_CONTENT_LENGTH}
               />
+              <div className="mt-1 flex items-center justify-between">
+                <span
+                  id="job-description-hint"
+                  className={`text-xs ${getCharCountColor(jobDescription.length, MIN_CONTENT_LENGTH)}`}
+                >
+                  {getValidationMessage(
+                    jobDescription.length,
+                    MIN_CONTENT_LENGTH,
+                  )}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {jobDescription.length}/{MIN_CONTENT_LENGTH} characters
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="company-name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Company Name
                 </label>
                 <input
+                  id="company-name"
                   type="text"
                   value={companyName}
                   onChange={(e) => setInput({ companyName: e.target.value })}
                   placeholder="e.g., Google"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="job-title"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Position Title
                 </label>
                 <input
+                  id="job-title"
                   type="text"
                   value={jobTitle}
                   onChange={(e) => setInput({ jobTitle: e.target.value })}
                   placeholder="e.g., Software Engineer"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -184,21 +271,47 @@ export default function AnalysisPage() {
             />
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="resume-content"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Or paste resume content
+                <span className="ml-2 text-xs text-gray-500">(required)</span>
               </label>
               <textarea
+                id="resume-content"
                 value={resumeText}
                 onChange={(e) => setInput({ resumeText: e.target.value })}
                 placeholder="Paste your resume content here..."
-                className="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                aria-describedby="resume-hint"
+                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
+                  resumeText.length > 0 && !resumeValid
+                    ? "border-amber-300 bg-amber-50"
+                    : resumeValid
+                      ? "border-green-300"
+                      : "border-gray-300"
+                }`}
+                required
+                minLength={MIN_CONTENT_LENGTH}
               />
+              <div className="mt-1 flex items-center justify-between">
+                <span
+                  id="resume-hint"
+                  className={`text-xs ${getCharCountColor(resumeText.length, MIN_CONTENT_LENGTH)}`}
+                >
+                  {getValidationMessage(resumeText.length, MIN_CONTENT_LENGTH)}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {resumeText.length}/{MIN_CONTENT_LENGTH} characters
+                </span>
+              </div>
             </div>
 
             {/* Analyze Button */}
             <button
               onClick={handleAnalyze}
               disabled={!canAnalyze || isAnalyzing}
+              aria-busy={isAnalyzing}
               className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isAnalyzing ? (
@@ -218,7 +331,11 @@ export default function AnalysisPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+          >
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-red-900">Error</p>
@@ -230,6 +347,9 @@ export default function AnalysisPage() {
         {/* Results Section */}
         {analysis && (
           <>
+            <div aria-live="polite" className="sr-only">
+              Active section: {activeTab.replace("-", " ")}
+            </div>
             <Tabs
               activeTab={activeTab}
               onChange={setActiveTab}
@@ -237,9 +357,22 @@ export default function AnalysisPage() {
             />
 
             <div className="mt-6">
+              {/*
+               * Tab Content Rendering Pattern:
+               * Each tab follows a consistent three-state pattern:
+               * 1. Empty state with generate button (initial state)
+               * 2. Loading state with spinner (during generation)
+               * 3. Content display (after successful generation)
+               */}
+
               {/* Overview Tab */}
               {activeTab === "overview" && (
-                <div className="space-y-6">
+                <section
+                  id={TAB_PANEL_IDS.overview}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-overview"
+                  className="space-y-6"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <OverallScoreCard score={analysis.overallScore} />
 
@@ -283,12 +416,16 @@ export default function AnalysisPage() {
                       />
                     </div>
                   )}
-                </div>
+                </section>
               )}
 
               {/* Cover Letter Tab */}
               {activeTab === "cover-letter" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS["cover-letter"]}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-cover-letter"
+                >
                   {!coverLetter && !isGenerating.coverLetter && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -324,22 +461,31 @@ export default function AnalysisPage() {
                       onSave={(content) => console.log("Saved:", content)}
                     />
                   )}
-                </div>
+                </section>
               )}
 
               {/* Gap Analysis Tab */}
               {activeTab === "gaps" && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <section
+                  id={TAB_PANEL_IDS.gaps}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-gaps"
+                  className="bg-white rounded-xl border border-gray-200 p-6"
+                >
                   <h3 className="font-semibold text-lg mb-4">
                     Skill Gap Analysis
                   </h3>
                   <GapList gaps={analysis.gapAnalysis} />
-                </div>
+                </section>
               )}
 
               {/* Optimization Tab */}
               {activeTab === "optimization" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS.optimization}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-optimization"
+                >
                   {!optimization && !isGenerating.optimization && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -370,12 +516,16 @@ export default function AnalysisPage() {
                   )}
 
                   {optimization && <OptimizationTips {...optimization} />}
-                </div>
+                </section>
               )}
 
               {/* Interview Prep Tab */}
               {activeTab === "interview" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS.interview}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-interview"
+                >
                   {!interviewPrep && !isGenerating.interview && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -405,12 +555,16 @@ export default function AnalysisPage() {
                   )}
 
                   {interviewPrep && <InterviewPrep {...interviewPrep} />}
-                </div>
+                </section>
               )}
 
               {/* Career Growth Tab */}
               {activeTab === "career" && (
-                <div>
+                <section
+                  id={TAB_PANEL_IDS.career}
+                  role="tabpanel"
+                  aria-labelledby="analysis-tab-career"
+                >
                   {!careerDevelopment && !isGenerating.career && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                       <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -442,7 +596,7 @@ export default function AnalysisPage() {
                   {careerDevelopment && (
                     <CareerDevelopment {...careerDevelopment} />
                   )}
-                </div>
+                </section>
               )}
             </div>
           </>

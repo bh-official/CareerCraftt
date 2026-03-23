@@ -2,6 +2,25 @@
 
 import { createContext, useContext, useReducer, useCallback } from "react";
 
+/**
+ * AnalysisContext - Global state management for the analysis feature
+ *
+ * Provides centralized state and actions for:
+ * - Job description and resume input (text and file)
+ * - Analysis results (scores, gaps, recommendations)
+ * - Generated content (cover letter, optimization tips, interview prep, career advice)
+ * - UI state (loading states, errors, active tab)
+ *
+ * Architecture:
+ * - Uses useReducer for predictable state transitions
+ * - Single source of truth avoids prop drilling across components
+ * - Separate generating flags allow parallel content generation
+ * - Session ID tracks analysis history for persistence
+ *
+ * @see {@link https://react.dev/learn/passing-data-deeply-with-context|React Context}
+ * @see {@link https://react.dev/reference/react/useReducer|useReducer hook}
+ */
+
 const AnalysisContext = createContext(null);
 
 const initialState = {
@@ -157,6 +176,14 @@ export function AnalysisProvider({ children }) {
     dispatch({ type: "SET_ERROR", payload: null });
 
     try {
+      console.info("[runAnalysis] Starting request", {
+        jobDescriptionLength: state.jobDescription?.length || 0,
+        resumeTextLength: state.resumeText?.length || 0,
+        companyName: state.companyName || null,
+        jobTitle: state.jobTitle || null,
+        sessionId: state.sessionId || null,
+      });
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,7 +196,27 @@ export function AnalysisProvider({ children }) {
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        console.error("[runAnalysis] Non-JSON response", {
+          status: response.status,
+          contentType: response.headers.get("content-type"),
+          bodyPreview: responseText?.slice(0, 300),
+        });
+        throw new Error(
+          `Unexpected server response (${response.status}). Check server logs for /api/analyze.`,
+        );
+      }
+
+      console.info("[runAnalysis] Response received", {
+        status: response.status,
+        success: data?.success,
+        error: data?.error || null,
+      });
 
       if (!data.success) {
         throw new Error(data.error || "Analysis failed");

@@ -1,6 +1,23 @@
 import mammoth from "mammoth";
 
 /**
+ * File Processing Utilities
+ *
+ * Provides client-side file parsing and text extraction for resume/job description uploads.
+ * Supports PDF, DOCX, and plain text formats with validation and normalization.
+ *
+ * Key Design Decisions:
+ * - Dynamic imports for pdf-parse to ensure ESM compatibility
+ * - Normalizes whitespace and line endings across all file types
+ * - Regex-based job description parsing for structured data extraction
+ * - Client-side validation to reduce server load
+ *
+ * @module fileProcessing
+ * @requires mammoth
+ * @requires pdf-parse
+ */
+
+/**
  * Extract text from various file formats
  * @param {Buffer} buffer - File buffer
  * @param {string} fileType - File MIME type or extension

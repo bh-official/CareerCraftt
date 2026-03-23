@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="600" y="280" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">CareerCraft</text>
+  <text x="600" y="360" font-family="Arial, sans-serif" font-size="36" fill="#bae6fd" text-anchor="middle">Craft your path to the perfect job</text>
+  <text x="600" y="420" font-family="Arial, sans-serif" font-size="24" fill="#e0f2fe" text-anchor="middle">AI-Powered Job Application Assistant</text>
+  <rect x="450" y="470" width="300" height="8" rx="4" fill="#22c55e"/>
+  <text x="600" y="520" font-family="Arial, sans-serif" font-size="20" fill="#a5f3fc" text-anchor="middle">Resume Analysis • Cover Letters • Interview Prep</text>
+</svg>

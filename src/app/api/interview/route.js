@@ -67,10 +67,152 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json({
-    message: "Use POST to generate interview prep",
-    required: ["jobDescription", "resumeText"],
-    optional: ["sessionId"],
-  });
+// GET - Retrieve interview prep
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get("session_id");
+    const id = searchParams.get("id");
+
+    if (id) {
+      const result = await query("SELECT * FROM interview_prep WHERE id = $1", [
+        id,
+      ]);
+
+      if (result.rows.length === 0) {
+        return NextResponse.json(
+          { error: "Interview prep not found" },
+          { status: 404 },
+        );
+      }
+
+      return NextResponse.json({ success: true, data: result.rows[0] });
+    }
+
+    if (sessionId) {
+      const result = await query(
+        "SELECT * FROM interview_prep WHERE session_id = $1",
+        [sessionId],
+      );
+
+      return NextResponse.json({ success: true, data: result.rows });
+    }
+
+    const result = await query(
+      "SELECT * FROM interview_prep ORDER BY created_at DESC LIMIT 100",
+    );
+
+    return NextResponse.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error("Get interview prep error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to get interview prep" },
+      { status: 500 },
+    );
+  }
+}
+
+// PUT - Update interview prep
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const {
+      id,
+      technical_questions,
+      behavioral_questions,
+      cultural_fit_talk_points,
+      questions_to_ask,
+      salary_prep,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Interview prep ID is required" },
+        { status: 400 },
+      );
+    }
+
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (technical_questions !== undefined) {
+      updates.push(`technical_questions = ${paramIndex++}`);
+      values.push(JSON.stringify(technical_questions));
+    }
+    if (behavioral_questions !== undefined) {
+      updates.push(`behavioral_questions = ${paramIndex++}`);
+      values.push(JSON.stringify(behavioral_questions));
+    }
+    if (cultural_fit_talk_points !== undefined) {
+      updates.push(`cultural_fit_talk_points = ${paramIndex++}`);
+      values.push(JSON.stringify(cultural_fit_talk_points));
+    }
+    if (questions_to_ask !== undefined) {
+      updates.push(`questions_to_ask = ${paramIndex++}`);
+      values.push(JSON.stringify(questions_to_ask));
+    }
+    if (salary_prep !== undefined) {
+      updates.push(`salary_prep = ${paramIndex++}`);
+      values.push(JSON.stringify(salary_prep));
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json(
+        { error: "No fields to update" },
+        { status: 400 },
+      );
+    }
+
+    values.push(id);
+
+    const result = await query(
+      `UPDATE interview_prep SET ${updates.join(", ")} 
+       WHERE id = ${paramIndex} RETURNING *`,
+      values,
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: "Interview prep not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error("Update interview prep error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to update interview prep" },
+      { status: 500 },
+    );
+  }
+}
+
+// DELETE - Delete interview prep
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Interview prep ID is required" },
+        { status: 400 },
+      );
+    }
+
+    await query("DELETE FROM interview_prep WHERE id = $1", [id]);
+
+    return NextResponse.json({
+      success: true,
+      message: "Interview prep deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete interview prep error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to delete interview prep" },
+      { status: 500 },
+    );
+  }
 }

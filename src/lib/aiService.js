@@ -57,6 +57,54 @@ async function callOpenRouter(messages, options = {}) {
 }
 
 /**
+ * Parse model JSON output with lightweight recovery for common formatting issues.
+ */
+function parseJsonWithRecovery(raw) {
+  const text = String(raw || "").trim();
+
+  const candidates = [];
+
+  // Raw response as-is
+  if (text) candidates.push(text);
+
+  // Strip markdown code fences if present
+  const withoutFences = text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  if (withoutFences && withoutFences !== text) candidates.push(withoutFences);
+
+  // Extract from first "{" to last "}" as a best-effort JSON object boundary
+  const firstBrace = withoutFences.indexOf("{");
+  const lastBrace = withoutFences.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    candidates.push(withoutFences.slice(firstBrace, lastBrace + 1));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // continue to sanitized attempt
+    }
+
+    // Common repair: trailing commas before ] or }
+    const sanitized = candidate
+      .replace(/,\s*([}\]])/g, "$1")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+
+    try {
+      return JSON.parse(sanitized);
+    } catch {
+      // continue to next candidate
+    }
+  }
+
+  throw new Error("Failed to parse AI response as valid JSON");
+}
+
+/**
  * Analyze job description against resume
  */
 export async function analyzeJobMatch(
