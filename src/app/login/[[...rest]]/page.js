@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useAuth, SignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { motion } from "framer-motion";
 
-/**
- * LoginPage Component
- *
- * Displays Clerk SignIn component for user authentication.
- * Redirects to dashboard if already signed in.
- */
 export default function LoginPage() {
   const { isLoaded, userId } = useAuth();
   const router = useRouter();
@@ -22,7 +17,6 @@ export default function LoginPage() {
     }
   }, [isLoaded, userId, router]);
 
-  // Show loading while checking auth
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -33,10 +27,7 @@ export default function LoginPage() {
     );
   }
 
-  // If already signed in, don't render sign in form
-  if (userId) {
-    return null;
-  }
+  if (userId) return null;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 px-4">
@@ -46,7 +37,6 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <Logo size="lg" />
@@ -57,7 +47,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Clerk SignIn Component */}
         <div className="bg-white rounded-2xl shadow-2xl p-6">
           <SignIn
             appearance={{
@@ -75,14 +64,13 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Back to Home */}
         <div className="text-center mt-6">
-          <a
+          <Link
             href="/features"
             className="text-blue-200 hover:text-white transition-colors"
           >
             ← Back to Features
-          </a>
+          </Link>
         </div>
       </motion.div>
     </div>

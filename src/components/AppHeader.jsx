@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { LogIn, UserPlus, LogOut, Menu, X } from "lucide-react";
 import Logo from "@/components/Logo";
 
-export default function AppHeader() {
+export default function AppHeader({ showAppLinks = true }) {
   const { isLoaded, userId } = useAuth();
   const { signOut } = useClerk();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const closeMenu = () => setMobileMenuOpen(false);
+  const hideAppLinksOnLanding = pathname === "/features" || pathname === "/";
+  const canShowAppLinks = showAppLinks && !hideAppLinksOnLanding;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -55,18 +59,22 @@ export default function AppHeader() {
 
             {isLoaded && userId && (
               <>
-                <Link
-                  href="/analysis?new=1"
-                  className="px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Analysis
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
+                {canShowAppLinks && (
+                  <>
+                    <Link
+                      href="/analysis?new=1"
+                      className="px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                    >
+                      Analysis
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => signOut({ redirectUrl: "/features" })}
@@ -125,20 +133,24 @@ export default function AppHeader() {
 
               {isLoaded && userId && (
                 <>
-                  <Link
-                    href="/analysis?new=1"
-                    onClick={closeMenu}
-                    className="block w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
-                  >
-                    Analysis
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    onClick={closeMenu}
-                    className="block w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
-                  >
-                    Dashboard
-                  </Link>
+                  {canShowAppLinks && (
+                    <>
+                      <Link
+                        href="/analysis?new=1"
+                        onClick={closeMenu}
+                        className="block w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                      >
+                        Analysis
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        onClick={closeMenu}
+                        className="block w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
