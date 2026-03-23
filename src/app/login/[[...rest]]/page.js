@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useAuth, SignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import Logo from "@/components/Logo";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
@@ -20,8 +19,12 @@ export default function LoginPage() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-pulse">
-          <Logo size="lg" />
+        <div
+          className="h-10 w-10 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"
+          aria-label="Loading"
+          role="status"
+        >
+          <span className="sr-only">Loading</span>
         </div>
       </div>
     );
@@ -37,16 +40,6 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo size="lg" />
-          </div>
-          <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
-          <p className="text-blue-200 mt-2">
-            Sign in to continue to CareerCraft
-          </p>
-        </div>
-
         <div className="bg-white rounded-2xl shadow-2xl p-6">
           <SignIn
             appearance={{
