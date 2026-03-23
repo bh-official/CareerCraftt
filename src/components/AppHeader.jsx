@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth, useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { LogIn, UserPlus, LogOut, Menu, X } from "lucide-react";
 import Logo from "@/components/Logo";
 
 export default function AppHeader({ showAppLinks = true }) {
   const { isLoaded, userId } = useAuth();
+  const { user } = useUser();
   const { signOut } = useClerk();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,6 +18,14 @@ export default function AppHeader({ showAppLinks = true }) {
   const hideAppLinksOnLanding = pathname === "/features" || pathname === "/";
   const hideSignInOnLanding = pathname === "/features" || pathname === "/";
   const canShowAppLinks = showAppLinks && !hideAppLinksOnLanding;
+  const resolvedUsername =
+    user?.username ||
+    user?.firstName ||
+    user?.fullName ||
+    user?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+    "User";
+  const profileImageUrl = user?.imageUrl || "";
+  const avatarFallbackLetter = resolvedUsername.charAt(0).toUpperCase() || "U";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
@@ -62,6 +71,23 @@ export default function AppHeader({ showAppLinks = true }) {
 
             {isLoaded && userId && (
               <>
+                <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2 text-sm text-blue-900">
+                  {profileImageUrl ? (
+                    <img
+                      src={profileImageUrl}
+                      alt={`${resolvedUsername} profile`}
+                      className="h-8 w-8 rounded-full object-cover border border-blue-200"
+                    />
+                  ) : (
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-blue-800 font-semibold border border-blue-300">
+                      {avatarFallbackLetter}
+                    </span>
+                  )}
+                  <span className="whitespace-nowrap font-medium">
+                    {`Hi, ${resolvedUsername}`}
+                  </span>
+                </div>
+
                 {canShowAppLinks && (
                   <>
                     <Link
@@ -80,7 +106,7 @@ export default function AppHeader({ showAppLinks = true }) {
                 )}
                 <button
                   type="button"
-                  onClick={() => signOut({ redirectUrl: "/features" })}
+                  onClick={() => signOut({ redirectUrl: "/" })}
                   className="flex items-center gap-1 sm:gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-base text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
@@ -138,6 +164,23 @@ export default function AppHeader({ showAppLinks = true }) {
 
               {isLoaded && userId && (
                 <>
+                  <div className="flex items-center gap-2 px-3 py-2 text-blue-900 bg-blue-50 rounded-lg border border-blue-100">
+                    {profileImageUrl ? (
+                      <img
+                        src={profileImageUrl}
+                        alt={`${resolvedUsername} profile`}
+                        className="h-8 w-8 rounded-full object-cover border border-blue-200"
+                      />
+                    ) : (
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-blue-800 font-semibold border border-blue-300">
+                        {avatarFallbackLetter}
+                      </span>
+                    )}
+                    <span className="text-sm font-medium">
+                      {`Hi, ${resolvedUsername}`}
+                    </span>
+                  </div>
+
                   {canShowAppLinks && (
                     <>
                       <Link
@@ -160,7 +203,7 @@ export default function AppHeader({ showAppLinks = true }) {
                     type="button"
                     onClick={() => {
                       closeMenu();
-                      signOut({ redirectUrl: "/features" });
+                      signOut({ redirectUrl: "/" });
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors font-medium"
                   >
