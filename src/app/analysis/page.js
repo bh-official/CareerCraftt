@@ -1,12 +1,15 @@
 "use client";
 
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import AppHeader from "@/components/AppHeader";
+
+// Prevent static prerender/export for this authenticated, client-driven route
+export const dynamic = "force-dynamic";
 
 // Dynamic import for the full-featured AnalysisPage component
 // ssr: false prevents prerender errors with useSearchParams
-const AnalysisPage = dynamic(() => import("@/components/AnalysisPage"), {
+const AnalysisPage = nextDynamic(() => import("@/components/AnalysisPage"), {
   ssr: false,
   loading: () => <AnalysisLoading />,
 });
