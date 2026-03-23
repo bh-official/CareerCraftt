@@ -107,7 +107,7 @@ export default function AppHeader({ showAppLinks = true }) {
                 <button
                   type="button"
                   onClick={() => signOut({ redirectUrl: "/" })}
-                  className="flex items-center gap-1 sm:gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-base text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm sm:text-base transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -205,7 +205,7 @@ export default function AppHeader({ showAppLinks = true }) {
                       closeMenu();
                       signOut({ redirectUrl: "/" });
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+                    className="flex items-center gap-2 w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out
