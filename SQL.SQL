@@ -114,35 +114,6 @@ CREATE TABLE IF NOT EXISTS team_members (
 );
 
 -- Optional but useful utility tables kept as non-breaking:
-CREATE TABLE IF NOT EXISTS api_usage (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-  endpoint TEXT,
-  tokens_used INTEGER,
-  requests_count INTEGER,
-  period_start TIMESTAMPTZ,
-  period_end TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS user_preferences (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  theme TEXT,
-  notifications JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS batch_applications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
-  job_descriptions JSONB,
-  results JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS application_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -270,6 +241,9 @@ DROP TABLE IF EXISTS public.cover_letters_legacy CASCADE;
 DROP TABLE IF EXISTS public.applications CASCADE;
 DROP TABLE IF EXISTS public.resumes CASCADE;
 DROP TABLE IF EXISTS public."user" CASCADE;
+DROP TABLE IF EXISTS public.api_usage CASCADE;
+DROP TABLE IF EXISTS public.user_preferences CASCADE;
+DROP TABLE IF EXISTS public.batch_applications CASCADE;
 
 -- =====================================================
 -- PHASE C: INDEXES
@@ -281,7 +255,6 @@ CREATE INDEX IF NOT EXISTS idx_sessions_is_active ON public.sessions(is_active);
 CREATE INDEX IF NOT EXISTS idx_sessions_status ON public.sessions(status);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON public.team_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_session_id ON public.team_members(session_id);
-CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON public.api_usage(user_id);
 CREATE INDEX IF NOT EXISTS idx_application_events_user_occurred
   ON public.application_events(user_id, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_application_events_session_id
@@ -299,9 +272,6 @@ ALTER TABLE IF EXISTS public.application_optimizations ENABLE ROW LEVEL SECURITY
 ALTER TABLE IF EXISTS public.interview_prep ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.career_development ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.team_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.api_usage ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.user_preferences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.batch_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.application_events ENABLE ROW LEVEL SECURITY;
 
 -- users
@@ -414,23 +384,6 @@ WITH CHECK (
   )
 );
 
-DROP POLICY IF EXISTS ba_all_own ON public.batch_applications;
-CREATE POLICY ba_all_own ON public.batch_applications
-FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM public.sessions s
-    WHERE s.id = batch_applications.session_id
-      AND s.user_id = (auth.jwt() ->> 'sub')
-  )
-)
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.sessions s
-    WHERE s.id = batch_applications.session_id
-      AND s.user_id = (auth.jwt() ->> 'sub')
-  )
-);
-
 -- team access
 DROP POLICY IF EXISTS tm_all_scoped ON public.team_members;
 CREATE POLICY tm_all_scoped ON public.team_members
@@ -450,17 +403,6 @@ WITH CHECK (
       AND s.user_id = (auth.jwt() ->> 'sub')
   )
 );
-
--- direct user-owned utility tables
-DROP POLICY IF EXISTS api_usage_all_own ON public.api_usage;
-CREATE POLICY api_usage_all_own ON public.api_usage
-FOR ALL USING (user_id = (auth.jwt() ->> 'sub'))
-WITH CHECK (user_id = (auth.jwt() ->> 'sub'));
-
-DROP POLICY IF EXISTS user_preferences_all_own ON public.user_preferences;
-CREATE POLICY user_preferences_all_own ON public.user_preferences
-FOR ALL USING (user_id = (auth.jwt() ->> 'sub'))
-WITH CHECK (user_id = (auth.jwt() ->> 'sub'));
 
 DROP POLICY IF EXISTS application_events_all_own ON public.application_events;
 CREATE POLICY application_events_all_own ON public.application_events

@@ -101,15 +101,6 @@ CREATE TABLE IF NOT EXISTS team_members (
   joined_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Batch applications
-CREATE TABLE IF NOT EXISTS batch_applications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
-  job_descriptions JSONB,
-  results JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Legacy tables (kept for backward compatibility)
 CREATE TABLE IF NOT EXISTS resumes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

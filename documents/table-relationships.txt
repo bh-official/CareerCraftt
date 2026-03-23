@@ -1,0 +1,82 @@
+CareerCraft Database Table Relationships (Updated)
+Generated: 2026-03-23
+
+Scope
+- This relationship map reflects the active schema used by the current app codebase.
+- Removed utility tables: api_usage, user_preferences, batch_applications.
+
+Core Tables
+1) users
+   - Primary Key: id (TEXT)
+   - Parent of sessions.user_id
+   - Parent of application_events.user_id
+   - Parent of team_members.user_id
+
+2) sessions
+   - Primary Key: id (UUID)
+   - Foreign Key: user_id -> users.id
+   - Parent of analysis_results.session_id
+   - Parent of cover_letters.session_id
+   - Parent of application_optimizations.session_id
+   - Parent of interview_prep.session_id
+   - Parent of career_development.session_id
+   - Parent of team_members.session_id
+   - Parent of application_events.session_id (SET NULL on delete)
+
+3) analysis_results
+   - Primary Key: id (UUID)
+   - Foreign Key: session_id -> sessions.id (ON DELETE CASCADE)
+   - Relationship: typically 1 session : 1 analysis result row (unique index by session_id in SQL.SQL)
+
+4) cover_letters
+   - Primary Key: id (UUID)
+   - Foreign Key: session_id -> sessions.id (ON DELETE CASCADE)
+   - Relationship: session-scoped generated cover letter data
+
+5) application_optimizations
+   - Primary Key: id (UUID)
+   - Foreign Key: session_id -> sessions.id (ON DELETE CASCADE)
+   - Relationship: optimization outputs attached to a session
+
+6) interview_prep
+   - Primary Key: id (UUID)
+   - Foreign Key: session_id -> sessions.id (ON DELETE CASCADE)
+   - Relationship: interview artifacts attached to a session
+
+7) career_development
+   - Primary Key: id (UUID)
+   - Foreign Key: session_id -> sessions.id (ON DELETE CASCADE)
+   - Relationship: career guidance artifacts attached to a session
+
+8) application_events
+   - Primary Key: id (UUID)
+   - Foreign Key: user_id -> users.id (ON DELETE CASCADE)
+   - Foreign Key: session_id -> sessions.id (ON DELETE SET NULL)
+   - Relationship: timeline/event log for user activity and optional session linkage
+
+9) team_members
+   - Primary Key: id (UUID)
+   - Foreign Key: session_id -> sessions.id (ON DELETE CASCADE)
+   - Foreign Key: user_id -> users.id (ON DELETE CASCADE)
+   - Unique constraint: (session_id, user_id)
+   - Relationship: optional collaborator membership for session-level access checks
+
+Cardinality Summary
+- users (1) -> (many) sessions
+- users (1) -> (many) application_events
+- users (1) -> (many) team_members
+- sessions (1) -> (many) application_events (nullable session_id due to SET NULL)
+- sessions (1) -> (many) team_members
+- sessions (1) -> (0..1 or many depending on write path) analysis_results
+- sessions (1) -> (0..many) cover_letters
+- sessions (1) -> (0..many) application_optimizations
+- sessions (1) -> (0..many) interview_prep
+- sessions (1) -> (0..many) career_development
+
+Runtime Access Notes
+- Owner-based access: session.user_id must match authenticated user.
+- Team-based access (optional): analysis-results and cover-letters APIs also allow access when authenticated user exists in team_members for that session.
+
+Legacy/Compatibility Tables
+- Legacy tables may exist in some environments (resumes, applications, cover_letters_legacy, legacy "user") for migration compatibility.
+- They are not part of the active relationship model above.
