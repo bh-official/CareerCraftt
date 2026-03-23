@@ -122,27 +122,13 @@ export default function FeaturesPage() {
               >
                 Turn job applications into a repeatable winning workflow
               </h1>
-              <p className="mt-4 text-lg text-gray-600 max-w-2xl">
-                Analyze resume fit, match job descriptions, improve ATS
-                readability, and take targeted next steps — all from one guided
-                experience.
+              <p className="mt-8 text-lg text-gray-600 max-w-2xl">
+               Analyze resume fit, match job descriptions, improve ATS
+               readability, and take targeted next steps — all from one guided
+               experience.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href={primaryCtaHref}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-white font-medium hover:bg-blue-700 transition-colors"
-                >
-                  {primaryCtaLabel}
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-                <Link
-                  href={secondaryCtaHref}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-3 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
-                >
-                  {secondaryCtaLabel}
-                </Link>
-              </div>
+             
             </div>
           </div>
         </section>
