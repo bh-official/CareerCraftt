@@ -1,0 +1,55 @@
+This project operates in the AI-assisted career and job application domain, focused on helping users move from opportunity discovery to confident submission through a single guided workflow. It enables candidates to analyze resume-to-job fit, identify skill and requirement gaps, generate tailored cover letters, receive ATS and readability optimization guidance, prepare for interviews, and plan ongoing career development steps. By combining these capabilities with authenticated user sessions, application tracking, and historical progress visibility, the system turns a typically fragmented job-search process into a structured, repeatable, and data-informed experience.
+
+### MVP (Core Deliverables)
+- User authentication and account access flow (sign up, sign in, sign out).
+- Landing experience and guided entry into the app workflow.
+- Resume + job description analysis with match scoring and gap insights.
+- AI-generated outputs for cover letter, optimization suggestions, interview prep, and career development.
+- Dashboard/session tracking so users can view and continue application work.
+
+### Stretch Goals Achieved
+- Polished navigation behavior and route handling (including clean landing/redirect behavior).
+- Personalized authenticated header experience (user greeting + profile avatar fallback).
+- Improved auth-page UX consistency through shared layout refactor.
+- Additional documentation artifacts (user stories, wireframes, relationship mapping).
+- Expanded API surface for modular generation and retrieval flows.
+
+### Future Goals
+- Team collaboration UI to activate existing shared-access foundations.
+- Advanced filtering, analytics, and trend insights in dashboard history.
+- Stronger accessibility benchmark validation (target Lighthouse >90 across pages).
+- Automated testing coverage expansion (integration/e2e around auth + AI flows).
+- Background jobs/queueing for heavier AI operations and better scalability.
+- Export/share enhancements (portfolio-ready reports, application bundles).
+- Usage limits/plan management and production-grade observability.
+
+
+### Route Map (App Router)
+- **Home / Landing**: [`/`](src/app/page.js) — primary entry route with product overview and CTAs.
+- **Legacy features path**: [`/features`](src/app/features/page.js) — server-redirects to [`/`](src/app/page.js) to avoid duplicate landing URLs.
+- **Authentication**:
+  - Sign in: [`/login`](src/app/login/[[...rest]]/page.js)
+  - Sign up: [`/signup`](src/app/signup/[[...rest]]/page.js)
+  - Both use shared auth shell: [`AuthLayout`](src/components/auth/AuthLayout.jsx:22)
+- **Protected app routes**:
+  - Analysis workspace: [`/analysis`](src/app/analysis/page.js)
+  - Dashboard: [`/dashboard`](src/app/dashboard/page.js)
+  - Session detail (dynamic): [`/sessions/[id]`](src/app/sessions/[id]/page.js)
+- **Route protection layer**: Clerk middleware in [`src/proxy.ts`](src/proxy.ts), with public/protected matchers.
+
+### Wireframe Explanation
+- Base low-fi wireframe: [`documents/app-wireframe.png`](documents/app-wireframe.png)
+- Clean colored version: [`documents/app-wireframe-colored.png`](documents/app-wireframe-colored.png)
+- Additional copy: [`documents/wireframe.png`](documents/wireframe.png)
+
+What the wireframe communicates:
+- **Screen hierarchy**: Home → Auth (Login/Signup) → Dashboard.
+- **Redirect behavior**: `/features` is shown as immediate redirect to `/`.
+- **Auth navigation clarity**: Login and Signup explicitly include **“Back to Home”**.
+- **Key layout regions** per screen:
+  - Header/nav
+  - Main content/hero
+  - Auth form card
+  - Dashboard panels (applications/history)
+  - Representative loading/error/empty states
+- **Flow transitions**: directional arrows/labels illustrate user movement between pages and post-auth outcomes.
