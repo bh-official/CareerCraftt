@@ -18,7 +18,7 @@ import {
   Send,
   FileText,
   Building,
-  Briefcase,
+  ClipboardList,
 } from "lucide-react";
 
 const TAB_PANEL_IDS = {
@@ -173,7 +173,7 @@ export default function AnalysisPage() {
           {/* Job Description Input */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Briefcase className="w-5 h-5 text-blue-600" />
+              <ClipboardList className="w-5 h-5 text-blue-600" />
               <h2 className="font-semibold text-gray-900">Job Description</h2>
             </div>
 
