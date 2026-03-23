@@ -59,10 +59,10 @@ export default function LoginPage() {
 
         <div className="text-center mt-6">
           <Link
-            href="/features"
+            href="/"
             className="text-blue-200 hover:text-white transition-colors"
           >
-            ← Back to Features
+            ← Back to Home
           </Link>
         </div>
       </motion.div>
