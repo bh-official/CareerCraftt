@@ -217,9 +217,40 @@ BEGIN
   END IF;
 END$$;
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_cover_letters_session_id
-  ON public.cover_letters(session_id)
-  WHERE session_id IS NOT NULL;
+-- NOTE:
+-- ON CONFLICT(session_id) requires a true UNIQUE/EXCLUSION arbiter that matches the
+-- conflict target. A partial unique index may not be inferred reliably across legacy DBs.
+-- Normalize existing data first, then enforce a real UNIQUE constraint.
+DROP INDEX IF EXISTS public.uq_cover_letters_session_id;
+
+WITH ranked_cover_letters AS (
+  SELECT
+    id,
+    session_id,
+    ROW_NUMBER() OVER (
+      PARTITION BY session_id
+      ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST, id DESC
+    ) AS rn
+  FROM public.cover_letters
+  WHERE session_id IS NOT NULL
+)
+DELETE FROM public.cover_letters c
+USING ranked_cover_letters r
+WHERE c.id = r.id
+  AND r.rn > 1;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'cover_letters_session_id_key'
+      AND conrelid = 'public.cover_letters'::regclass
+  ) THEN
+    ALTER TABLE public.cover_letters
+      ADD CONSTRAINT cover_letters_session_id_key UNIQUE (session_id);
+  END IF;
+END$$;
 
 -- 4) Ensure one-row-per-session on generated artifact tables used with ON CONFLICT(session_id)
 CREATE UNIQUE INDEX IF NOT EXISTS uq_application_optimizations_session_id

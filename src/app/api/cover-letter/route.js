@@ -30,12 +30,22 @@ export async function POST(request) {
 
     // Save to database if session exists
     if (sessionId) {
-      await query(
-        `INSERT INTO cover_letters (session_id, content) 
-         VALUES ($1, $2)
-         ON CONFLICT (session_id) DO UPDATE SET content = $2, updated_at = NOW()`,
+      // Upsert without relying on ON CONFLICT constraint inference (handles legacy DBs safely)
+      const updateResult = await query(
+        `UPDATE cover_letters
+         SET content = $2, updated_at = NOW()
+         WHERE session_id = $1
+         RETURNING id`,
         [sessionId, result.coverLetter],
       );
+
+      if (updateResult.rows.length === 0) {
+        await query(
+          `INSERT INTO cover_letters (session_id, content, created_at, updated_at)
+           VALUES ($1, $2, NOW(), NOW())`,
+          [sessionId, result.coverLetter],
+        );
+      }
     }
 
     return NextResponse.json({
