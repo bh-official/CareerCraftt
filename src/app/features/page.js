@@ -144,17 +144,6 @@ export default function FeaturesPage() {
                 </Link>
               </div>
             </div>
-
-            <div className="relative h-64 sm:h-80 lg:h-96 rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-              <Image
-                src="/image.png"
-                alt="CareerCraft workflow preview showing route to components, API calls, and PostgreSQL data flow"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-                priority
-              />
-            </div>
           </div>
         </section>
 

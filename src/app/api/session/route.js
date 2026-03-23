@@ -2,6 +2,23 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { ensureUserRecord } from "@/lib/ensureUserRecord";
+import { recordApplicationEvent } from "@/lib/applicationEvents";
+
+const ALLOWED_STATUSES = new Set([
+  "draft",
+  "analyzed",
+  "applied",
+  "interviewing",
+  "offer",
+  "rejected",
+  "archived",
+]);
+
+function normalizeStatus(status) {
+  if (typeof status !== "string") return null;
+  const value = status.trim().toLowerCase();
+  return ALLOWED_STATUSES.has(value) ? value : null;
+}
 
 /**
  * Authentication helper - validates user is authenticated
@@ -115,11 +132,13 @@ export async function POST(request) {
     await ensureUserRecord(userId);
 
     const body = await request.json();
-    const { name, jobDescription, resumeText, companyName, jobTitle } = body;
+    const { name, jobDescription, resumeText, companyName, jobTitle, status } =
+      body;
+    const normalizedStatus = normalizeStatus(status) || "draft";
 
     const result = await query(
-      `INSERT INTO sessions (name, job_description, resume_text, company_name, job_title, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO sessions (name, job_description, resume_text, company_name, job_title, status, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
         name || "New Analysis",
@@ -127,9 +146,21 @@ export async function POST(request) {
         resumeText,
         companyName,
         jobTitle,
+        normalizedStatus,
         userId, // Associate session with authenticated user
       ],
     );
+
+    await recordApplicationEvent({
+      userId,
+      sessionId: result.rows[0].id,
+      eventType: "created",
+      metadata: {
+        name: result.rows[0].name,
+        companyName: result.rows[0].company_name,
+        jobTitle: result.rows[0].job_title,
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -187,6 +218,27 @@ export async function PUT(request) {
       );
     }
 
+    if (status !== undefined && normalizeStatus(status) === null) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid status. Allowed values: draft, analyzed, applied, interviewing, offer, rejected, archived",
+        },
+        { status: 400 },
+      );
+    }
+
+    const previousSessionResult = await query(
+      "SELECT name, company_name, job_title, status FROM sessions WHERE id = $1 AND user_id = $2",
+      [id, userId],
+    );
+
+    if (previousSessionResult.rows.length === 0) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    const previousSession = previousSessionResult.rows[0];
+
     // Build dynamic update query
     const updates = [];
     const values = [];
@@ -214,7 +266,7 @@ export async function PUT(request) {
     }
     if (status !== undefined) {
       updates.push(`status = $${paramIndex++}`);
-      values.push(status);
+      values.push(normalizeStatus(status));
     }
 
     if (updates.length === 0) {
@@ -237,9 +289,49 @@ export async function PUT(request) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
+    const updatedSession = result.rows[0];
+
+    const hasContentChanges =
+      name !== undefined ||
+      jobDescription !== undefined ||
+      resumeText !== undefined ||
+      companyName !== undefined ||
+      jobTitle !== undefined;
+
+    if (hasContentChanges) {
+      await recordApplicationEvent({
+        userId,
+        sessionId: id,
+        eventType: "edited",
+        metadata: {
+          name: updatedSession.name,
+          companyName: updatedSession.company_name,
+          jobTitle: updatedSession.job_title,
+        },
+      });
+    }
+
+    if (
+      status !== undefined &&
+      previousSession.status !== updatedSession.status
+    ) {
+      await recordApplicationEvent({
+        userId,
+        sessionId: id,
+        eventType: "status_updated",
+        metadata: {
+          previousStatus: previousSession.status,
+          newStatus: updatedSession.status,
+          name: updatedSession.name,
+          companyName: updatedSession.company_name,
+          jobTitle: updatedSession.job_title,
+        },
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      session: result.rows[0],
+      session: updatedSession,
     });
   } catch (error) {
     console.error("Update session error:", error);
@@ -282,7 +374,7 @@ export async function DELETE(request) {
     }
 
     const deleteResult = await query(
-      "DELETE FROM sessions WHERE id = $1 AND user_id = $2 RETURNING id",
+      "DELETE FROM sessions WHERE id = $1 AND user_id = $2 RETURNING id, name, company_name, job_title, status",
       [sessionId, userId],
     );
 
@@ -292,6 +384,21 @@ export async function DELETE(request) {
         { status: 404 },
       );
     }
+
+    const deletedSession = deleteResult.rows[0];
+
+    await recordApplicationEvent({
+      userId,
+      sessionId: null,
+      eventType: "deleted",
+      metadata: {
+        sessionId: deletedSession.id,
+        name: deletedSession.name,
+        companyName: deletedSession.company_name,
+        jobTitle: deletedSession.job_title,
+        status: deletedSession.status,
+      },
+    });
 
     return NextResponse.json({
       success: true,

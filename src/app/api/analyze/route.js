@@ -3,6 +3,7 @@ import { analyzeJobMatch } from "@/lib/aiService";
 import { query } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { ensureUserRecord } from "@/lib/ensureUserRecord";
+import { recordApplicationEvent } from "@/lib/applicationEvents";
 
 export async function POST(request) {
   const { userId } = await auth();
@@ -60,10 +61,11 @@ export async function POST(request) {
 
     // Create or update session in database (scoped to authenticated user)
     let newSessionId;
+    let createdViaAnalyze = false;
     if (sessionId) {
       const updateResult = await query(
         `UPDATE sessions 
-         SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, updated_at = NOW()
+         SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, status = 'analyzed', updated_at = NOW()
          WHERE id = $5 AND user_id = $6
          RETURNING id`,
         [jobDescription, resumeText, companyName, jobTitle, sessionId, userId],
@@ -79,13 +81,14 @@ export async function POST(request) {
       newSessionId = updateResult.rows[0].id;
     } else {
       const insertResult = await query(
-        `INSERT INTO sessions (job_description, resume_text, company_name, job_title, user_id) 
-         VALUES ($1, $2, $3, $4, $5) 
+        `INSERT INTO sessions (job_description, resume_text, company_name, job_title, status, user_id) 
+         VALUES ($1, $2, $3, $4, 'analyzed', $5) 
          RETURNING id`,
         [jobDescription, resumeText, companyName, jobTitle, userId],
       );
 
       newSessionId = insertResult.rows[0].id;
+      createdViaAnalyze = true;
     }
 
     // Save analysis results
@@ -132,6 +135,30 @@ export async function POST(request) {
         JSON.stringify(analysis.partialMatches || []),
       ],
     );
+
+    if (createdViaAnalyze) {
+      await recordApplicationEvent({
+        userId,
+        sessionId: newSessionId,
+        eventType: "created",
+        metadata: {
+          source: "analysis_flow",
+          companyName: companyName || null,
+          jobTitle: jobTitle || null,
+        },
+      });
+    }
+
+    await recordApplicationEvent({
+      userId,
+      sessionId: newSessionId,
+      eventType: "analyzed",
+      metadata: {
+        overallScore: weightedScore,
+        companyName: companyName || null,
+        jobTitle: jobTitle || null,
+      },
+    });
 
     return NextResponse.json({
       success: true,

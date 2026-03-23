@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
   name TEXT,
+  status TEXT DEFAULT 'draft',
   job_description TEXT,
   resume_text TEXT,
   company_name TEXT,
@@ -142,19 +143,34 @@ CREATE TABLE IF NOT EXISTS batch_applications (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS application_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
+  event_type TEXT NOT NULL,
+  event_label TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  occurred_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =====================================================
 -- PHASE B: MIGRATION FROM LEGACY STRUCTURE
 -- =====================================================
 
--- 1) Ensure users contains all rows from legacy "user" table
-INSERT INTO users (id, email, full_name, created_at, updated_at)
-SELECT u.id, u.email, u.full_name, COALESCE(u.created_at, NOW()), NOW()
-FROM public."user" u
-ON CONFLICT (id)
-DO UPDATE SET
-  email = COALESCE(EXCLUDED.email, users.email),
-  full_name = COALESCE(EXCLUDED.full_name, users.full_name),
-  updated_at = NOW();
+-- 1) Ensure users contains all rows from legacy "user" table (if it exists)
+DO $$
+BEGIN
+  IF to_regclass('public."user"') IS NOT NULL THEN
+    INSERT INTO users (id, email, full_name, created_at, updated_at)
+    SELECT u.id, u.email, u.full_name, COALESCE(u.created_at, NOW()), NOW()
+    FROM public."user" u
+    ON CONFLICT (id)
+    DO UPDATE SET
+      email = COALESCE(EXCLUDED.email, users.email),
+      full_name = COALESCE(EXCLUDED.full_name, users.full_name),
+      updated_at = NOW();
+  END IF;
+END$$;
 
 -- 2) Drop old FK (if still pointing to legacy "user") and recreate canonical FK
 ALTER TABLE IF EXISTS public.sessions
@@ -165,6 +181,9 @@ ALTER TABLE IF EXISTS public.sessions
   FOREIGN KEY (user_id)
   REFERENCES public.users(id)
   ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.sessions
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
 
 -- 3) Ensure cover_letters has canonical columns for current app code
 ALTER TABLE IF EXISTS public.cover_letters
@@ -228,9 +247,14 @@ DROP TABLE IF EXISTS public."user" CASCADE;
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON public.sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_updated_at ON public.sessions(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sessions_is_active ON public.sessions(is_active);
+CREATE INDEX IF NOT EXISTS idx_sessions_status ON public.sessions(status);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON public.team_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_session_id ON public.team_members(session_id);
 CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON public.api_usage(user_id);
+CREATE INDEX IF NOT EXISTS idx_application_events_user_occurred
+  ON public.application_events(user_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_application_events_session_id
+  ON public.application_events(session_id);
 
 -- =====================================================
 -- PHASE D: RLS HARDENING
@@ -247,6 +271,7 @@ ALTER TABLE IF EXISTS public.team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.api_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.batch_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.application_events ENABLE ROW LEVEL SECURITY;
 
 -- users
 DROP POLICY IF EXISTS users_all_own ON public.users;
@@ -406,5 +431,9 @@ CREATE POLICY user_preferences_all_own ON public.user_preferences
 FOR ALL USING (user_id = (auth.jwt() ->> 'sub'))
 WITH CHECK (user_id = (auth.jwt() ->> 'sub'));
 
-COMMIT;
+DROP POLICY IF EXISTS application_events_all_own ON public.application_events;
+CREATE POLICY application_events_all_own ON public.application_events
+FOR ALL USING (user_id = (auth.jwt() ->> 'sub'))
+WITH CHECK (user_id = (auth.jwt() ->> 'sub'));
 
+COMMIT;
