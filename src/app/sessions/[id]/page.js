@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { useAnalysis } from "@/context/AnalysisContext";
 
 /**
  * Dynamic Session Page
@@ -20,6 +21,7 @@ export default function SessionPage() {
   const params = useParams();
   const router = useRouter();
   const sessionId = params?.id;
+  const { loadSession } = useAnalysis();
 
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,98 @@ export default function SessionPage() {
 
     fetchSession();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const parseJSON = (value, fallback) => {
+      if (value == null) return fallback;
+      if (typeof value === "string") {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return fallback;
+        }
+      }
+      return value;
+    };
+
+    const hasAnalysis = session.overall_score != null;
+
+    loadSession({
+      jobDescription: session.job_description || "",
+      resumeText: session.resume_text || "",
+      companyName: session.company_name || "",
+      jobTitle: session.job_title || "",
+      sessionId: session.id,
+      analysis: hasAnalysis
+        ? {
+            overallScore: Number(session.overall_score) || 0,
+            skills: {
+              score: Number(session.skills_score) || 0,
+            },
+            experience: {
+              score: Number(session.experience_score) || 0,
+            },
+            education: {
+              score: Number(session.education_score) || 0,
+            },
+            keywords: {
+              score: Number(session.keywords_score) || 0,
+            },
+            gapAnalysis: parseJSON(session.gap_analysis, []),
+            matchedRequirements: parseJSON(session.matched_requirements, []),
+            unmatchedRequirements: parseJSON(
+              session.unmatched_requirements,
+              [],
+            ),
+            partialMatches: parseJSON(session.partial_matches, []),
+          }
+        : null,
+      coverLetter: session.cover_letter || "",
+      optimization:
+        session.resume_improvements ||
+        session.ats_recommendations ||
+        session.keyword_suggestions
+          ? {
+              resumeImprovements: parseJSON(session.resume_improvements, []),
+              atsRecommendations: parseJSON(session.ats_recommendations, []),
+              keywordSuggestions: parseJSON(session.keyword_suggestions, {}),
+              contentSuggestions: [],
+            }
+          : null,
+      interviewPrep:
+        session.technical_questions ||
+        session.behavioral_questions ||
+        session.cultural_fit_talk_points
+          ? {
+              technicalQuestions: parseJSON(session.technical_questions, []),
+              behavioralQuestions: parseJSON(session.behavioral_questions, []),
+              culturalFitPoints: parseJSON(
+                session.cultural_fit_talk_points,
+                [],
+              ),
+              questionsToAsk: [],
+              salaryPrep: {},
+              weaknessStrategies: [],
+            }
+          : null,
+      careerDevelopment:
+        session.suggested_certifications ||
+        session.suggested_skills ||
+        session.learning_resources
+          ? {
+              certifications: parseJSON(session.suggested_certifications, []),
+              skillsToDevelop: parseJSON(session.suggested_skills, []),
+              learningResources: parseJSON(session.learning_resources, []),
+              networkingSuggestions: [],
+              emergingSkills: [],
+            }
+          : null,
+      activeTab: "overview",
+      error: null,
+    });
+  }, [session, loadSession]);
 
   // Loading state
   if (loading) {
