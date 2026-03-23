@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth, SignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
@@ -15,27 +15,12 @@ import { motion } from "framer-motion";
 export default function SignupPage() {
   const { isLoaded, userId } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (isLoaded && userId) {
       router.push("/dashboard");
     }
   }, [isLoaded, userId, router]);
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-pulse">
-          <Logo size="lg" />
-        </div>
-      </div>
-    );
-  }
 
   // Show loading while checking auth
   if (!isLoaded) {

@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useAuth, useClerk } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
 import { LogIn, UserPlus, LogOut } from "lucide-react";
 import Logo from "@/components/Logo";
 
 export default function AppHeader() {
   const { isLoaded, userId } = useAuth();
   const { signOut } = useClerk();
-  const pathname = usePathname();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
