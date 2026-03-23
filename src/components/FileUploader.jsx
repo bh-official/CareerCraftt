@@ -142,11 +142,11 @@ export default function FileUploader({
               : ""}
       </div>
       {file ? (
-        <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-            <div>
-              <p className="font-medium text-green-900">{file.name}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium text-green-900 truncate">{file.name}</p>
               <p className="text-sm text-green-700">
                 {uploading ? "Processing..." : "Ready"}
               </p>
@@ -155,7 +155,7 @@ export default function FileUploader({
           <button
             onClick={removeFile}
             disabled={disabled}
-            className="p-1 hover:bg-green-100 rounded transition-colors"
+            className="p-1 hover:bg-green-100 rounded transition-colors self-end sm:self-auto"
             aria-label={`Remove file ${file.name}`}
           >
             <X className="w-5 h-5 text-green-700" aria-hidden="true" />
@@ -167,7 +167,7 @@ export default function FileUploader({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           className={`
-            relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
+            relative border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-colors
             ${
               isDragging
                 ? "border-blue-500 bg-blue-50"
@@ -189,16 +189,17 @@ export default function FileUploader({
         >
           <input
             type="file"
+            id={uploadId}
             accept={accept}
             onChange={handleInputChange}
             disabled={disabled}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
 
-          <Upload className="w-10 h-10 mx-auto mb-4 text-gray-400" />
+          <Upload className="w-8 sm:w-10 h-8 sm:h-10 mx-auto mb-3 sm:mb-4 text-gray-400" />
 
-          <p className="text-gray-700 font-medium">{label}</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm sm:text-base text-gray-700 font-medium">{label}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Drag and drop or click to browse
           </p>
           <p className="text-xs text-gray-400 mt-2">

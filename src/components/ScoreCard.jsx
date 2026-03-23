@@ -22,13 +22,13 @@ export default function ScoreCard({ score, label, confidence, details }) {
   };
 
   return (
-    <div className={`p-4 rounded-lg border ${getColor(score)}`}>
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <p className="text-sm font-medium opacity-75">{label}</p>
-          <p className="text-3xl font-bold mt-1">{score}%</p>
+    <div className={`p-3 sm:p-4 rounded-lg border ${getColor(score)}`}>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-medium opacity-75">{label}</p>
+          <p className="text-2xl sm:text-3xl font-bold mt-1">{score}%</p>
         </div>
-        <div className="text-right">
+        <div className="text-right flex-shrink-0">
           <span
             className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getColor(score)}`}
           >
@@ -52,9 +52,9 @@ export default function ScoreCard({ score, label, confidence, details }) {
       {details && (
         <div className="mt-3 space-y-1">
           {details.matched && details.matched.length > 0 && (
-            <div className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
+            <div className="flex items-start gap-2 text-xs sm:text-sm">
+              <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
                 <span className="font-medium">Matched:</span>
                 <span className="opacity-75 ml-1">
                   {details.matched.slice(0, 3).join(", ")}
@@ -65,9 +65,9 @@ export default function ScoreCard({ score, label, confidence, details }) {
             </div>
           )}
           {details.missing && details.missing.length > 0 && (
-            <div className="flex items-start gap-2 text-sm">
-              <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <div>
+            <div className="flex items-start gap-2 text-xs sm:text-sm">
+              <XCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
                 <span className="font-medium">Missing:</span>
                 <span className="opacity-75 ml-1">
                   {details.missing.slice(0, 3).join(", ")}
@@ -78,9 +78,9 @@ export default function ScoreCard({ score, label, confidence, details }) {
             </div>
           )}
           {details.partial && details.partial.length > 0 && (
-            <div className="flex items-start gap-2 text-sm">
-              <MinusCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
+            <div className="flex items-start gap-2 text-xs sm:text-sm">
+              <MinusCircle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
                 <span className="font-medium">Partial:</span>
                 <span className="opacity-75 ml-1">
                   {details.partial.slice(0, 3).join(", ")}
@@ -126,9 +126,9 @@ export function OverallScoreCard({ score }) {
   const progress = (score / 100) * circumference;
 
   return (
-    <div className={`p-6 rounded-xl border ${colors.bg} ${colors.border}`}>
+    <div className={`p-4 sm:p-6 rounded-xl border ${colors.bg} ${colors.border}`}>
       <div className="flex flex-col items-center">
-        <div className="relative w-40 h-40">
+        <div className="relative w-32 h-32 sm:w-40 sm:h-40">
           <svg className="w-full h-full transform -rotate-90">
             {/* Background circle */}
             <circle
@@ -155,16 +155,16 @@ export function OverallScoreCard({ score }) {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-5xl font-bold ${colors.main}`}>
+            <span className={`text-3xl sm:text-5xl font-bold ${colors.main}`}>
               {score}%
             </span>
-            <span className="text-sm opacity-75 mt-1">Match Score</span>
+            <span className="text-xs sm:text-sm opacity-75 mt-1">Match Score</span>
           </div>
         </div>
 
-        <div className="mt-4 text-center">
-          <h3 className="text-lg font-semibold">Overall Compatibility</h3>
-          <p className="text-sm opacity-75">
+        <div className="mt-3 sm:mt-4 text-center px-2">
+          <h3 className="text-base sm:text-lg font-semibold">Overall Compatibility</h3>
+          <p className="text-xs sm:text-sm opacity-75 mt-1">
             {score >= 80
               ? "Great fit for this position!"
               : score >= 50

@@ -41,9 +41,9 @@ export default function Tabs({ activeTab, onChange, isGenerating = {} }) {
   };
 
   return (
-    <div className="border-b border-gray-200 bg-white">
+    <div className="border-b border-gray-200 bg-white sticky top-16 z-40 overflow-x-auto">
       <nav
-        className="flex space-x-1 overflow-x-auto px-4"
+        className="flex space-x-1 overflow-x-auto px-2 sm:px-4 min-w-min sm:min-w-0 scrollbar-hide"
         aria-label="Analysis result sections"
         role="tablist"
       >
@@ -62,7 +62,7 @@ export default function Tabs({ activeTab, onChange, isGenerating = {} }) {
               onClick={() => onChange(tab.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}
               className={`
-                flex items-center gap-2 py-4 px-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                flex items-center gap-1 sm:gap-2 py-4 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors flex-shrink-0
                 ${
                   isActive
                     ? "border-blue-500 text-blue-600"
@@ -74,8 +74,11 @@ export default function Tabs({ activeTab, onChange, isGenerating = {} }) {
               aria-controls={panelId}
               tabIndex={isActive ? 0 : -1}
             >
-              <Icon className="w-4 h-4" aria-hidden="true" />
-              {tab.label}
+              <Icon className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="inline sm:hidden text-xs">
+                {tab.label.split(" ")[0]}
+              </span>
               {isLoading && (
                 <>
                   <Loader2

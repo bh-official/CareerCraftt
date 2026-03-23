@@ -164,7 +164,7 @@ export default function AnalysisPage() {
     <div className="min-h-screen bg-gray-50">
       <main
         id="main-content"
-        className="max-w-7xl mx-auto px-4 py-6"
+        className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6"
         role="main"
         tabIndex="-1"
       >
@@ -196,7 +196,7 @@ export default function AnalysisPage() {
                 onChange={(e) => setInput({ jobDescription: e.target.value })}
                 placeholder="Paste the job description here..."
                 aria-describedby="job-description-hint"
-                className={`w-full h-48 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
                   jobDescription.length > 0 && !jobDescriptionValid
                     ? "border-amber-300 bg-amber-50"
                     : jobDescriptionValid
@@ -222,7 +222,7 @@ export default function AnalysisPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div>
                 <label
                   htmlFor="company-name"
@@ -236,7 +236,7 @@ export default function AnalysisPage() {
                   value={companyName}
                   onChange={(e) => setInput({ companyName: e.target.value })}
                   placeholder="e.g., Google"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -252,7 +252,7 @@ export default function AnalysisPage() {
                   value={jobTitle}
                   onChange={(e) => setInput({ jobTitle: e.target.value })}
                   placeholder="e.g., Software Engineer"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function AnalysisPage() {
                 onChange={(e) => setInput({ resumeText: e.target.value })}
                 placeholder="Paste your resume content here..."
                 aria-describedby="resume-hint"
-                className={`w-full h-48 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
+                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
                   resumeText.length > 0 && !resumeValid
                     ? "border-amber-300 bg-amber-50"
                     : resumeValid
