@@ -292,13 +292,18 @@ export default function FeaturesPage() {
           aria-labelledby="final-cta-title"
         >
           <div className="rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 p-8 sm:p-10 text-white">
-            <h2 id="final-cta-title" className="text-2xl sm:text-3xl font-bold">
-              Ready to execute your next application with confidence?
-            </h2>
-            <p className="mt-3 text-blue-100 max-w-2xl">
-              Use the guided workflow above to analyze fit, close priority gaps,
-              and move faster toward interviews.
-            </p>
+            <div className="mx-auto max-w-3xl text-center">
+              <h2
+                id="final-cta-title"
+                className="text-2xl sm:text-3xl font-bold"
+              >
+                Ready to execute your next application with confidence?
+              </h2>
+              <p className="mt-3 text-blue-100">
+                Use the guided workflow above to analyze fit, close priority
+                gaps, and move faster toward interviews.
+              </p>
+            </div>
           </div>
         </section>
       </main>

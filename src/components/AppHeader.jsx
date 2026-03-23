@@ -15,6 +15,7 @@ export default function AppHeader({ showAppLinks = true }) {
 
   const closeMenu = () => setMobileMenuOpen(false);
   const hideAppLinksOnLanding = pathname === "/features" || pathname === "/";
+  const hideSignInOnLanding = pathname === "/features" || pathname === "/";
   const canShowAppLinks = showAppLinks && !hideAppLinksOnLanding;
 
   return (
@@ -40,13 +41,15 @@ export default function AppHeader({ showAppLinks = true }) {
           >
             {(!isLoaded || !userId) && (
               <>
-                <Link
-                  href="/login"
-                  className="flex items-center gap-1 sm:gap-2 px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign In</span>
-                </Link>
+                {!hideSignInOnLanding && (
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-1 sm:gap-2 px-3 py-2 text-sm sm:text-base text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In</span>
+                  </Link>
+                )}
                 <Link
                   href="/signup"
                   className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm sm:text-base transition-colors"
@@ -112,14 +115,16 @@ export default function AppHeader({ showAppLinks = true }) {
             <div className="px-2 pt-2 pb-3 space-y-1">
               {(!isLoaded || !userId) && (
                 <>
-                  <Link
-                    href="/login"
-                    onClick={closeMenu}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Sign In
-                  </Link>
+                  {!hideSignInOnLanding && (
+                    <Link
+                      href="/login"
+                      onClick={closeMenu}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      Sign In
+                    </Link>
+                  )}
                   <Link
                     href="/signup"
                     onClick={closeMenu}
