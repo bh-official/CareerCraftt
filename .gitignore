@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+
+PRESENTATION_STRUCTURE_AND_TOOL_CHOICES.md
+
+SPEC.md
+SPEC1.md
+
+user-stories.md
