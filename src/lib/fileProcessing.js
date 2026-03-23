@@ -56,21 +56,11 @@ export async function extractText(buffer, fileType) {
  * Extract text from PDF - using built-in approach
  */
 async function extractFromPdf(buffer) {
-  let parser;
-
-  // Dynamic import of pdf-parse for ESM compatibility (v2 API)
+  // Dynamic import of pdf-parse for ESM compatibility (v1 callable API)
   try {
     const pdfModule = await import("pdf-parse");
-    const PDFParse = pdfModule.PDFParse || pdfModule.default?.PDFParse;
-
-    if (typeof PDFParse !== "function") {
-      throw new Error(
-        "pdf-parse v2 API unavailable: PDFParse export not found",
-      );
-    }
-
-    parser = new PDFParse({ data: buffer });
-    const data = await parser.getText();
+    const parsePdf = pdfModule.default || pdfModule;
+    const data = await parsePdf(buffer);
 
     if (!data.text || data.text.trim().length === 0) {
       return { success: false, error: "No text content found in PDF" };
@@ -80,9 +70,9 @@ async function extractFromPdf(buffer) {
       success: true,
       text: cleanText(data.text),
       metadata: {
-        pages: data.total ?? data.numpages,
-        title: data.info?.Title || data.meta?.info?.Title || "",
-        author: data.info?.Author || data.meta?.info?.Author || "",
+        pages: data.numpages,
+        title: data.info?.Title || "",
+        author: data.info?.Author || "",
       },
     };
   } catch (error) {
@@ -93,12 +83,6 @@ async function extractFromPdf(buffer) {
       };
     }
     throw error;
-  } finally {
-    try {
-      await parser?.destroy?.();
-    } catch {
-      // no-op: best-effort cleanup for parser resources
-    }
   }
 }
 
