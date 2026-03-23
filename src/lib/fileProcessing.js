@@ -56,10 +56,11 @@ export async function extractText(buffer, fileType) {
  * Extract text from PDF - using built-in approach
  */
 async function extractFromPdf(buffer) {
-  // Dynamic import of pdf-parse for ESM compatibility (v1 callable API)
+  // Import parser function directly to avoid pdf-parse entrypoint side-effects
   try {
-    const pdfModule = await import("pdf-parse");
+    const pdfModule = await import("pdf-parse/lib/pdf-parse.js");
     const parsePdf = pdfModule.default || pdfModule;
+
     const data = await parsePdf(buffer);
 
     if (!data.text || data.text.trim().length === 0) {
