@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect } from "react";
 import nextDynamic from "next/dynamic";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { useAnalysis } from "@/context/AnalysisContext";
 
@@ -45,9 +44,6 @@ function AnalysisLoading() {
 
 export default function AnalysisPageWrapper() {
   const { reset } = useAnalysis();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -67,7 +63,12 @@ export default function AnalysisPageWrapper() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const { pathname, search } = window.location;
     if (pathname !== "/analysis") return;
+
+    const searchParams = new URLSearchParams(search);
 
     const hasStaleSessionParam =
       searchParams.has("id") ||
@@ -77,7 +78,7 @@ export default function AnalysisPageWrapper() {
 
     if (hasStaleSessionParam) {
       reset();
-      router.replace("/analysis?new=1");
+      window.history.replaceState(null, "", "/analysis?new=1");
       return;
     }
 
@@ -85,10 +86,10 @@ export default function AnalysisPageWrapper() {
       reset();
 
       if (!isExplicitNew) {
-        router.replace("/analysis?new=1");
+        window.history.replaceState(null, "", "/analysis?new=1");
       }
     }
-  }, [pathname, reset, router, searchParams]);
+  }, [reset]);
 
   return (
     <div className="min-h-screen bg-gray-50">
