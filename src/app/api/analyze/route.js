@@ -5,9 +5,6 @@ import { auth } from "@clerk/nextjs/server";
 import { ensureUserRecord } from "@/lib/ensureUserRecord";
 import { recordApplicationEvent } from "@/lib/applicationEvents";
 
-/**
- * Validate required input fields for analysis
- */
 function validateAnalysisInput(jobDescription, resumeText) {
   if (!jobDescription?.trim()) {
     return { valid: false, error: "Job description is required" };
@@ -35,41 +32,11 @@ export async function POST(request) {
   }
 
   try {
-    // Provision user rows up-front so session FK checks always pass
     await ensureUserRecord(userId);
 
-    // Diagnostic log: which table does sessions.user_id currently reference?
-    const fkResult = await query(
-      `SELECT c.conname, cl.relname AS referenced_table
-       FROM pg_constraint c
-       JOIN pg_class t ON t.oid = c.conrelid
-       JOIN pg_namespace n ON n.oid = t.relnamespace
-       JOIN pg_class cl ON cl.oid = c.confrelid
-       WHERE c.contype = 'f'
-         AND n.nspname = 'public'
-         AND t.relname = 'sessions'
-         AND c.conname = 'sessions_user_id_fkey'`,
-    );
-    console.info("[analyze] sessions_user_id_fkey target", {
-      userId,
-      fkTarget: fkResult.rows[0]?.referenced_table || "unknown",
-    });
-
-    // Parse request body
-    let body;
-    try {
-      body = await request.json();
-    } catch (parseError) {
-      console.error("[analyze] JSON parse error:", parseError.message);
-      return NextResponse.json(
-        { error: "Invalid request format. Please check your input." },
-        { status: 400 },
-      );
-    }
-
+    const body = await request.json();
     const { jobDescription, resumeText, companyName, jobTitle, sessionId } = body;
 
-    // Validate input
     const validation = validateAnalysisInput(jobDescription, resumeText);
     if (!validation.valid) {
       return NextResponse.json(
@@ -78,10 +45,38 @@ export async function POST(request) {
       );
     }
 
-    // Run the analysis
+    
+    // SET STATUS = ANALYZING
+    
+    let newSessionId;
+    let createdViaAnalyze = false;
+
+    if (sessionId) {
+      await query(
+        `UPDATE sessions 
+         SET status = 'analyzing', updated_at = NOW()
+         WHERE id = $1 AND user_id = $2`,
+        [sessionId, userId],
+      );
+
+      newSessionId = sessionId;
+    } else {
+      const insertResult = await query(
+        `INSERT INTO sessions (job_description, resume_text, company_name, job_title, status, user_id) 
+         VALUES ($1, $2, $3, $4, 'analyzing', $5) 
+         RETURNING id`,
+        [jobDescription, resumeText, companyName, jobTitle, userId],
+      );
+
+      newSessionId = insertResult.rows[0].id;
+      createdViaAnalyze = true;
+    }
+
+    
+    //  RUN AI 
+    
     const analysis = await analyzeJobMatch(jobDescription, resumeText);
 
-    // Calculate overall weighted score
     const weightedScore = Math.round(
       (analysis.skills?.score || 0) * 0.3 +
         (analysis.experience?.score || 0) * 0.35 +
@@ -90,37 +85,14 @@ export async function POST(request) {
         (analysis.additional?.score || 0) * 0.1,
     );
 
-    // Create or update session in database (scoped to authenticated user)
-    let newSessionId;
-    let createdViaAnalyze = false;
-    if (sessionId) {
-      const updateResult = await query(
-        `UPDATE sessions 
-         SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, status = 'analyzed', updated_at = NOW()
-         WHERE id = $5 AND user_id = $6
-         RETURNING id`,
-        [jobDescription, resumeText, companyName, jobTitle, sessionId, userId],
-      );
-
-      if (updateResult.rows.length === 0) {
-        return NextResponse.json(
-          { error: "Session not found or access denied" },
-          { status: 403 },
-        );
-      }
-
-      newSessionId = updateResult.rows[0].id;
-    } else {
-      const insertResult = await query(
-        `INSERT INTO sessions (job_description, resume_text, company_name, job_title, status, user_id) 
-         VALUES ($1, $2, $3, $4, 'analyzed', $5) 
-         RETURNING id`,
-        [jobDescription, resumeText, companyName, jobTitle, userId],
-      );
-
-      newSessionId = insertResult.rows[0].id;
-      createdViaAnalyze = true;
-    }
+    //  SET STATUS = ANALYZED
+    
+    await query(
+      `UPDATE sessions 
+       SET job_description = $1, resume_text = $2, company_name = $3, job_title = $4, status = 'analyzed', updated_at = NOW()
+       WHERE id = $5 AND user_id = $6`,
+      [jobDescription, resumeText, companyName, jobTitle, newSessionId, userId],
+    );
 
     // Save analysis results
     await query(
@@ -209,26 +181,13 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Analysis error:", error);
-    
-    // Distinguish between different error types
-    let errorMessage = "Analysis failed. Please try again.";
-    let statusCode = 500;
-    
-    if (error.message?.includes("API") || error.message?.includes("timeout")) {
-      errorMessage = "AI service is temporarily unavailable. Please try again in a moment.";
-    } else if (error.message?.includes("database") || error.message?.includes("query")) {
-      errorMessage = "Unable to save analysis. Please try again.";
-    } else if (error.message?.includes("network")) {
-      errorMessage = "Network error. Please check your connection and try again.";
-    }
-    
+
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: errorMessage,
-        details: process.env.NODE_ENV === "development" ? error.message : undefined
+        error: "Analysis failed. Please try again.",
       },
-      { status: statusCode },
+      { status: 500 },
     );
   }
 }
@@ -236,7 +195,5 @@ export async function POST(request) {
 export async function GET() {
   return NextResponse.json({
     message: "Use POST to analyze job match",
-    required: ["jobDescription", "resumeText"],
-    optional: ["companyName", "jobTitle", "sessionId"],
   });
 }

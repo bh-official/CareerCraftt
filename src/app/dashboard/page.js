@@ -19,6 +19,7 @@ import AppHeader from "@/components/AppHeader";
 
 const STATUS_OPTIONS = [
   "draft",
+  "analyzing",
   "analyzed",
   "applied",
   "interviewing",
@@ -30,6 +31,7 @@ const STATUS_OPTIONS = [
 const STATUS_STYLES = {
   draft: "bg-gray-100 text-gray-700",
   analyzed: "bg-blue-100 text-blue-700",
+  analyzing: "bg-yellow-100 text-yellow-700",
   applied: "bg-indigo-100 text-indigo-700",
   interviewing: "bg-amber-100 text-amber-700",
   offer: "bg-emerald-100 text-emerald-700",
@@ -156,6 +158,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadEvents();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadApplications();
+    }, 4000); // every 4 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const totalApplications = useMemo(() => applications.length, [applications]);
@@ -390,8 +400,13 @@ export default function DashboardPage() {
                           </td>
                           <td className="py-3 pr-4">
                             <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[app.status] || STATUS_STYLES.draft}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+                                STATUS_STYLES[app.status] || STATUS_STYLES.draft
+                              }`}
                             >
+                              {app.status === "analyzing" && (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              )}
                               {formatStatus(app.status)}
                             </span>
                           </td>
@@ -459,8 +474,13 @@ export default function DashboardPage() {
                           </p>
                         </div>
                         <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[app.status] || STATUS_STYLES.draft}`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+                            STATUS_STYLES[app.status] || STATUS_STYLES.draft
+                          }`}
                         >
+                          {app.status === "analyzing" && (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          )}
                           {formatStatus(app.status)}
                         </span>
                       </div>
