@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAnalysis } from "@/context/AnalysisContext";
 import FileUploader from "@/components/FileUploader";
 import Tabs from "@/components/Tabs";
@@ -9,6 +9,7 @@ import ScoreCard, { OverallScoreCard } from "@/components/ScoreCard";
 import {
   Loader2,
   AlertCircle,
+  CheckCircle2,
   Sparkles,
   RefreshCw,
   Send,
@@ -84,6 +85,19 @@ export default function AnalysisPage() {
 
   const [jobFile, setJobFile] = useState(null);
   const [resumeFile, setResumeFile] = useState(null);
+  const [analysisStatus, setAnalysisStatus] = useState("");
+  const [analysisStatusType, setAnalysisStatusType] = useState("idle");
+
+  useEffect(() => {
+    if (!analysisStatus || isAnalyzing) return;
+
+    const timer = setTimeout(() => {
+      setAnalysisStatus("");
+      setAnalysisStatusType("idle");
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [analysisStatus, isAnalyzing]);
 
   /**
    * Handles job description file selection.
@@ -111,8 +125,16 @@ export default function AnalysisPage() {
 
   const handleAnalyze = async () => {
     try {
+      setAnalysisStatusType("loading");
+      setAnalysisStatus("Analysis in progress... Please wait.");
       await runAnalysis();
+      setAnalysisStatusType("success");
+      setAnalysisStatus("Analysis completed successfully.");
     } catch (err) {
+      setAnalysisStatusType("error");
+      setAnalysisStatus(
+        "Analysis failed. Please review the error and try again.",
+      );
       console.error("Analysis failed:", err);
     }
   };
@@ -156,6 +178,8 @@ export default function AnalysisPage() {
   const jobDescriptionValid = jobDescription.length >= MIN_CONTENT_LENGTH;
   const resumeValid = resumeText.length >= MIN_CONTENT_LENGTH;
   const canAnalyze = jobDescriptionValid && resumeValid;
+  const isAnalysisFailed = analysisStatusType === "error";
+  const isAnalysisCompleted = analysisStatusType === "success";
 
   // Helper function to get character count color
   const getCharCountColor = (length, min) => {
@@ -337,6 +361,29 @@ export default function AnalysisPage() {
                 </>
               )}
             </button>
+
+            {analysisStatus && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={`mt-3 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                  isAnalysisFailed
+                    ? "border-red-200 bg-red-50 text-red-700"
+                    : isAnalysisCompleted
+                      ? "border-green-200 bg-green-50 text-green-700"
+                      : "border-blue-200 bg-blue-50 text-blue-700"
+                }`}
+              >
+                {isAnalysisFailed ? (
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                ) : isAnalysisCompleted ? (
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                )}
+                {analysisStatus}
+              </div>
+            )}
           </div>
         </div>
 
