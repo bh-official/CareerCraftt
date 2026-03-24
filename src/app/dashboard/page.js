@@ -17,9 +17,267 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 
+const STATUS_OPTIONS = [
+  "draft",
+  "analyzed",
+  "applied",
+  "interviewing",
+  "offer",
+  "rejected",
+  "archived",
+];
+
+const STATUS_STYLES = {
+  draft: "bg-gray-100 text-gray-700",
+  analyzed: "bg-blue-100 text-blue-700",
+  applied: "bg-indigo-100 text-indigo-700",
+  interviewing: "bg-amber-100 text-amber-700",
+  offer: "bg-emerald-100 text-emerald-700",
+  rejected: "bg-red-100 text-red-700",
+  archived: "bg-slate-100 text-slate-700",
+};
+
+function formatDate(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatStatus(value) {
+  if (!value) return "Unknown";
+  return value
+    .split("_")
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ");
+}
+
+function mapEventTypeToIcon(eventType) {
+  if (eventType === "created") return CheckCircle2;
+  if (eventType === "analyzed") return Target;
+  if (eventType === "deleted") return Trash2;
+  if (eventType === "status_updated") return Clock3;
+  return ShieldCheck;
+}
 
 export default function DashboardPage() {
-  
+  const [applications, setApplications] = useState([]);
+  const [events, setEvents] = useState([]);
+
+  const [loadingApps, setLoadingApps] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [errorApps, setErrorApps] = useState("");
+  const [errorEvents, setErrorEvents] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    companyName: "",
+    jobTitle: "",
+    status: "draft",
+  });
+  const [editError, setEditError] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ open: false, app: null });
+
+  const loadApplications = async () => {
+    try {
+      setLoadingApps(true);
+      setErrorApps("");
+
+      const query = new URLSearchParams({ limit: "200", offset: "0" });
+      if (search.trim()) query.set("search", search.trim());
+      if (statusFilter) query.set("status", statusFilter);
+
+      const response = await fetch(`/api/applications?${query.toString()}`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to load applications");
+      }
+
+      setApplications(
+        Array.isArray(data.applications) ? data.applications : [],
+      );
+    } catch (err) {
+      setErrorApps(err.message || "Unable to load applications");
+    } finally {
+      setLoadingApps(false);
+    }
+  };
+
+  const loadEvents = async () => {
+    try {
+      setLoadingEvents(true);
+      setErrorEvents("");
+
+      const response = await fetch(
+        "/api/application-events?limit=100&offset=0",
+        {
+          cache: "no-store",
+          credentials: "include",
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to load application history");
+      }
+
+      setEvents(Array.isArray(data.events) ? data.events : []);
+    } catch (err) {
+      setErrorEvents(err.message || "Unable to load application history");
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApplications();
+    
+  }, [search, statusFilter]);
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const totalApplications = useMemo(() => applications.length, [applications]);
+
+  const openEdit = (app) => {
+    setEditingId(app.id);
+    setEditError("");
+    setEditForm({
+      name: app.name || "",
+      companyName: app.company_name || "",
+      jobTitle: app.job_title || "",
+      status: app.status || "draft",
+    });
+  };
+
+  const closeEdit = () => {
+    setEditingId(null);
+    setEditError("");
+  };
+
+  const validateEdit = () => {
+    if (!editForm.name.trim()) return "Application name is required";
+    if (editForm.companyName.trim().length > 120)
+      return "Company name is too long";
+    if (editForm.jobTitle.trim().length > 120) return "Job title is too long";
+    if (!STATUS_OPTIONS.includes(editForm.status)) return "Invalid status";
+    return "";
+  };
+
+  const saveEdit = async () => {
+    const validationError = validateEdit();
+    if (validationError) {
+      setEditError(validationError);
+      return;
+    }
+
+    const previous = [...applications];
+    const optimistic = applications.map((app) =>
+      app.id === editingId
+        ? {
+            ...app,
+            name: editForm.name.trim(),
+            company_name: editForm.companyName.trim(),
+            job_title: editForm.jobTitle.trim(),
+            status: editForm.status,
+            updated_at: new Date().toISOString(),
+          }
+        : app,
+    );
+
+    setApplications(optimistic);
+    setSavingEdit(true);
+    setEditError("");
+
+    try {
+      const response = await fetch("/api/applications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingId,
+          name: editForm.name.trim(),
+          companyName: editForm.companyName.trim(),
+          jobTitle: editForm.jobTitle.trim(),
+          status: editForm.status,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to update application");
+      }
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === editingId ? { ...app, ...data.application } : app,
+        ),
+      );
+      closeEdit();
+      loadEvents();
+    } catch (err) {
+      setApplications(previous);
+      setEditError(err.message || "Failed to update application");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const askDelete = (app) => {
+    setDeleteModal({ open: true, app });
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({ open: false, app: null });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.app) return;
+
+    const id = deleteModal.app.id;
+    const previous = [...applications];
+
+    setDeletingId(id);
+    setApplications((prev) => prev.filter((app) => app.id !== id));
+    cancelDelete();
+
+    try {
+      const response = await fetch(`/api/applications?id=${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to delete application");
+      }
+      loadEvents();
+    } catch (err) {
+      setApplications(previous);
+      setErrorApps(err.message || "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader />
@@ -30,6 +288,7 @@ export default function DashboardPage() {
         </a>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          
           <section
             className="flex items-center justify-between gap-4 flex-wrap"
             aria-labelledby="dashboard-title"
@@ -56,6 +315,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
+          
           <section
             className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm"
             aria-labelledby="applications-title"
@@ -200,12 +460,11 @@ export default function DashboardPage() {
                     </tbody>
                   </table>
                 </div>
-
-              
               </>
             )}
           </section>
 
+          
           <section
             className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm"
             aria-labelledby="history-title"
@@ -265,7 +524,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      
+     
     </div>
   );
 }
