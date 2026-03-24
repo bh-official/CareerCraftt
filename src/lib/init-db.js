@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id TEXT REFERENCES "user"(id),
   name TEXT,
+  status TEXT DEFAULT 'draft',
   job_description TEXT,
   resume_text TEXT,
   company_name TEXT,
@@ -131,6 +132,10 @@ CREATE TABLE IF NOT EXISTS cover_letters_legacy (
   content TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Backfill for existing databases created before status column was added
+ALTER TABLE IF EXISTS sessions
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
 `;
 
 export async function initializeDatabase() {
