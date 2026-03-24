@@ -90,6 +90,7 @@ export default function AnalysisPage() {
 
   useEffect(() => {
     if (!analysisStatus || isAnalyzing) return;
+    if (analysisStatusType === "loading") return;
 
     const timer = setTimeout(() => {
       setAnalysisStatus("");
@@ -97,7 +98,7 @@ export default function AnalysisPage() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [analysisStatus, isAnalyzing]);
+  }, [analysisStatus, analysisStatusType, isAnalyzing]);
 
   /**
    * Handles job description file selection.
