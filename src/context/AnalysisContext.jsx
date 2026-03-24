@@ -139,6 +139,12 @@ function analysisReducer(state, action) {
         activeTab: action.payload,
       };
 
+    case "CLEAR_ERROR":
+      return {
+        ...state,
+        error: null,
+      };
+
     case "RESET":
       return initialState;
 
@@ -208,7 +214,7 @@ export function AnalysisProvider({ children }) {
           bodyPreview: responseText?.slice(0, 300),
         });
         throw new Error(
-          `Unexpected server response (${response.status}). Check server logs for /api/analyze.`,
+          `Unexpected server response (${response.status}). Please check your input and try again.`,
         );
       }
 
@@ -218,8 +224,8 @@ export function AnalysisProvider({ children }) {
         error: data?.error || null,
       });
 
-      if (!data.success) {
-        throw new Error(data.error || "Analysis failed");
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Server error (${response.status})`);
       }
 
       dispatch({
@@ -228,7 +234,15 @@ export function AnalysisProvider({ children }) {
       });
       return data;
     } catch (error) {
-      dispatch({ type: "SET_ERROR", payload: error.message });
+      // Distinguish between different error types for better UX
+      let userError = error.message;
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        userError = "Network connection error. Please check your internet and try again.";
+      } else if (error.message.includes("timeout")) {
+        userError = "Request took too long. Please try again.";
+      }
+      
+      dispatch({ type: "SET_ERROR", payload: userError });
       throw error;
     }
   }, [
@@ -379,6 +393,10 @@ export function AnalysisProvider({ children }) {
     dispatch({ type: "RESET" });
   }, []);
 
+  const clearError = useCallback(() => {
+    dispatch({ type: "CLEAR_ERROR" });
+  }, []);
+
   const loadSession = useCallback((sessionData) => {
     dispatch({ type: "LOAD_SESSION", payload: sessionData });
   }, []);
@@ -393,8 +411,10 @@ export function AnalysisProvider({ children }) {
     generateInterviewPrep,
     generateCareerDevelopment,
     setActiveTab,
+    clearError,
     reset,
     loadSession,
+    clearError,
   };
 
   return (

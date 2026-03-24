@@ -19,6 +19,7 @@ import {
   FileText,
   Building,
   ClipboardList,
+  X,
 } from "lucide-react";
 
 const TAB_PANEL_IDS = {
@@ -69,6 +70,7 @@ export default function AnalysisPage() {
     error,
     activeTab,
     setActiveTab,
+    clearError,
   } = useAnalysis();
 
   const [jobFile, setJobFile] = useState(null);
@@ -196,7 +198,7 @@ export default function AnalysisPage() {
                 onChange={(e) => setInput({ jobDescription: e.target.value })}
                 placeholder="Paste the job description here..."
                 aria-describedby="job-description-hint"
-                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500 ${
                   jobDescription.length > 0 && !jobDescriptionValid
                     ? "border-amber-300 bg-amber-50"
                     : jobDescriptionValid
@@ -284,7 +286,7 @@ export default function AnalysisPage() {
                 onChange={(e) => setInput({ resumeText: e.target.value })}
                 placeholder="Paste your resume content here..."
                 aria-describedby="resume-hint"
-                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
+                className={`w-full h-40 sm:h-48 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500 ${
                   resumeText.length > 0 && !resumeValid
                     ? "border-amber-300 bg-amber-50"
                     : resumeValid
@@ -337,10 +339,18 @@ export default function AnalysisPage() {
             className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
           >
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="font-medium text-red-900">Error</p>
               <p className="text-sm text-red-700">{error}</p>
             </div>
+            <button
+              onClick={clearError}
+              className="flex-shrink-0 text-red-600 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded p-1"
+              aria-label="Dismiss error message"
+              type="button"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
 

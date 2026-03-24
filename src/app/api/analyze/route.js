@@ -5,6 +5,25 @@ import { auth } from "@clerk/nextjs/server";
 import { ensureUserRecord } from "@/lib/ensureUserRecord";
 import { recordApplicationEvent } from "@/lib/applicationEvents";
 
+/**
+ * Validate required input fields for analysis
+ */
+function validateAnalysisInput(jobDescription, resumeText) {
+  if (!jobDescription?.trim()) {
+    return { valid: false, error: "Job description is required" };
+  }
+  if (!resumeText?.trim()) {
+    return { valid: false, error: "Resume is required" };
+  }
+  if (jobDescription.length < 50) {
+    return { valid: false, error: "Job description is too short (minimum 50 characters)" };
+  }
+  if (resumeText.length < 50) {
+    return { valid: false, error: "Resume is too short (minimum 50 characters)" };
+  }
+  return { valid: true };
+}
+
 export async function POST(request) {
   const { userId } = await auth();
 
@@ -36,13 +55,25 @@ export async function POST(request) {
       fkTarget: fkResult.rows[0]?.referenced_table || "unknown",
     });
 
-    const body = await request.json();
-    const { jobDescription, resumeText, companyName, jobTitle, sessionId } =
-      body;
-
-    if (!jobDescription || !resumeText) {
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error("[analyze] JSON parse error:", parseError.message);
       return NextResponse.json(
-        { error: "Job description and resume are required" },
+        { error: "Invalid request format. Please check your input." },
+        { status: 400 },
+      );
+    }
+
+    const { jobDescription, resumeText, companyName, jobTitle, sessionId } = body;
+
+    // Validate input
+    const validation = validateAnalysisInput(jobDescription, resumeText);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
         { status: 400 },
       );
     }
@@ -178,9 +209,26 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Analysis error:", error);
+    
+    // Distinguish between different error types
+    let errorMessage = "Analysis failed. Please try again.";
+    let statusCode = 500;
+    
+    if (error.message?.includes("API") || error.message?.includes("timeout")) {
+      errorMessage = "AI service is temporarily unavailable. Please try again in a moment.";
+    } else if (error.message?.includes("database") || error.message?.includes("query")) {
+      errorMessage = "Unable to save analysis. Please try again.";
+    } else if (error.message?.includes("network")) {
+      errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
     return NextResponse.json(
-      { error: error.message || "Analysis failed" },
-      { status: 500 },
+      { 
+        success: false,
+        error: errorMessage,
+        details: process.env.NODE_ENV === "development" ? error.message : undefined
+      },
+      { status: statusCode },
     );
   }
 }
