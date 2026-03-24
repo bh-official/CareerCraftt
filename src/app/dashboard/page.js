@@ -366,6 +366,7 @@ export default function DashboardPage() {
                 Loading applications...
               </div>
             )}
+            
 
             {!loadingApps && errorApps && (
               <div
