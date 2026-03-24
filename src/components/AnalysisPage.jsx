@@ -1,15 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useAnalysis } from "@/context/AnalysisContext";
 import FileUploader from "@/components/FileUploader";
 import Tabs from "@/components/Tabs";
 import ScoreCard, { OverallScoreCard } from "@/components/ScoreCard";
-import GapList, { RequirementsList } from "@/components/GapList";
-import CoverLetterEditor from "@/components/CoverLetterEditor";
-import OptimizationTips from "@/components/OptimizationTips";
-import InterviewPrep from "@/components/InterviewPrep";
-import CareerDevelopment from "@/components/CareerDevelopment";
 import {
   Loader2,
   AlertCircle,
@@ -21,6 +17,19 @@ import {
   ClipboardList,
   X,
 } from "lucide-react";
+
+const GapList = dynamic(() => import("@/components/GapList"));
+const RequirementsList = dynamic(() =>
+  import("@/components/GapList").then((mod) => mod.RequirementsList),
+);
+const CoverLetterEditor = dynamic(
+  () => import("@/components/CoverLetterEditor"),
+);
+const OptimizationTips = dynamic(() => import("@/components/OptimizationTips"));
+const InterviewPrep = dynamic(() => import("@/components/InterviewPrep"));
+const CareerDevelopment = dynamic(
+  () => import("@/components/CareerDevelopment"),
+);
 
 const TAB_PANEL_IDS = {
   overview: "analysis-panel-overview",
@@ -468,7 +477,7 @@ export default function AnalysisPage() {
                   {coverLetter && (
                     <CoverLetterEditor
                       initialContent={coverLetter}
-                      onSave={(content) => console.log("Saved:", content)}
+                      onSave={async () => {}}
                     />
                   )}
                 </section>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { LogIn, UserPlus, LogOut, Menu, X } from "lucide-react";
@@ -73,9 +74,12 @@ export default function AppHeader({ showAppLinks = true }) {
               <>
                 <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2 text-sm text-blue-900">
                   {profileImageUrl ? (
-                    <img
+                    <Image
                       src={profileImageUrl}
                       alt={`${resolvedUsername} profile`}
+                      width={32}
+                      height={32}
+                      sizes="32px"
                       className="h-8 w-8 rounded-full object-cover border border-blue-200"
                     />
                   ) : (
@@ -166,9 +170,12 @@ export default function AppHeader({ showAppLinks = true }) {
                 <>
                   <div className="flex items-center gap-2 px-3 py-2 text-blue-900 bg-blue-50 rounded-lg border border-blue-100">
                     {profileImageUrl ? (
-                      <img
+                      <Image
                         src={profileImageUrl}
                         alt={`${resolvedUsername} profile`}
+                        width={32}
+                        height={32}
+                        sizes="32px"
                         className="h-8 w-8 rounded-full object-cover border border-blue-200"
                       />
                     ) : (
