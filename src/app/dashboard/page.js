@@ -1,4 +1,4 @@
-"use client";
+"use client"; 
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -151,7 +151,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadApplications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [search, statusFilter]);
 
   useEffect(() => {
@@ -282,11 +282,19 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <AppHeader />
 
-      <main id="main-content" className="pt-20 pb-10" tabIndex={-1}>
+      <main id="main-content" className="pt-20 pb-10" tabIndex={-1} role="main">
+        <a href="#main-content" className="sr-only focus:not-sr-only">
+          Skip to main content
+        </a>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <section className="flex items-center justify-between gap-4 flex-wrap">
+          
+          <section
+            className="flex items-center justify-between gap-4 flex-wrap"
+            aria-labelledby="dashboard-title"
+          >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 id="dashboard-title" className="text-2xl font-bold text-gray-900">
                 My Applications
               </h1>
               <p className="mt-1 text-sm text-gray-600">
@@ -299,16 +307,21 @@ export default function DashboardPage() {
               <Link
                 href="/analysis?new=1"
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors"
+                aria-label="Create a new application"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4" aria-hidden="true" />
                 New Application
               </Link>
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+          
+          <section
+            className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm"
+            aria-labelledby="applications-title"
+          >
             <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 id="applications-title" className="text-lg font-semibold text-gray-900">
                 Applications
               </h2>
               <span className="text-sm text-gray-500">
@@ -317,14 +330,23 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <label htmlFor="search-applications" className="sr-only">
+                Search applications
+              </label>
               <input
+                id="search-applications"
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by title or company"
                 className="md:col-span-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               />
+
+              <label htmlFor="filter-status" className="sr-only">
+                Filter by status
+              </label>
               <select
+                id="filter-status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -339,22 +361,26 @@ export default function DashboardPage() {
             </div>
 
             {loadingApps && (
-              <div className="py-14 flex items-center justify-center text-gray-500">
+              <div className="py-14 flex items-center justify-center text-gray-500" role="status" aria-live="polite">
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Loading applications...
               </div>
             )}
+            
 
             {!loadingApps && errorApps && (
-              <div className="py-8 rounded-lg border border-red-200 bg-red-50 text-red-700 flex items-center justify-center gap-2">
-                <AlertCircle className="w-4 h-4" />
+              <div
+                className="py-8 rounded-lg border border-red-200 bg-red-50 text-red-700 flex items-center justify-center gap-2"
+                role="alert"
+              >
+                <AlertCircle className="w-4 h-4" aria-hidden="true" />
                 {errorApps}
               </div>
             )}
 
             {!loadingApps && !errorApps && applications.length === 0 && (
               <div className="py-14 text-center text-gray-600">
-                <FolderOpen className="w-8 h-8 mx-auto mb-3 text-gray-400" />
+                <FolderOpen className="w-8 h-8 mx-auto mb-3 text-gray-400" aria-hidden="true" />
                 <p className="font-medium">No applications found</p>
                 <p className="text-sm mt-1">
                   Create one from the analysis flow.
@@ -365,27 +391,23 @@ export default function DashboardPage() {
             {!loadingApps && !errorApps && applications.length > 0 && (
               <>
                 <div className="hidden md:block overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-sm" aria-label="Applications table">
                     <thead>
                       <tr className="border-b border-gray-200 text-left text-gray-500">
-                        <th className="py-3 pr-4 font-medium">Application</th>
-                        <th className="py-3 pr-4 font-medium">Status</th>
-                        <th className="py-3 pr-4 font-medium">Score</th>
-                        <th className="py-3 pr-4 font-medium">Updated</th>
-                        <th className="py-3 font-medium text-right">Actions</th>
+                        <th scope="col" className="py-3 pr-4 font-medium">Application</th>
+                        <th scope="col" className="py-3 pr-4 font-medium">Status</th>
+                        <th scope="col" className="py-3 pr-4 font-medium">Score</th>
+                        <th scope="col" className="py-3 pr-4 font-medium">Updated</th>
+                        <th scope="col" className="py-3 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {applications.map((app) => (
                         <tr key={app.id} className="border-b border-gray-100">
                           <td className="py-3 pr-4">
-                            <p className="font-medium text-gray-900">
-                              {app.name || "Untitled"}
-                            </p>
+                            <p className="font-medium text-gray-900">{app.name || "Untitled"}</p>
                             <p className="text-xs text-gray-500 mt-0.5">
-                              {(app.job_title || "-") +
-                                " · " +
-                                (app.company_name || "-")}
+                              {(app.job_title || "-") + " · " + (app.company_name || "-")}
                             </p>
                           </td>
                           <td className="py-3 pr-4">
@@ -396,28 +418,26 @@ export default function DashboardPage() {
                             </span>
                           </td>
                           <td className="py-3 pr-4 text-gray-700">
-                            {app.overall_score == null
-                              ? "-"
-                              : `${app.overall_score}%`}
+                            {app.overall_score == null ? "-" : `${app.overall_score}%`}
                           </td>
-                          <td className="py-3 pr-4 text-gray-700">
-                            {formatDate(app.updated_at)}
-                          </td>
+                          <td className="py-3 pr-4 text-gray-700">{formatDate(app.updated_at)}</td>
                           <td className="py-3 text-right">
                             <div className="inline-flex items-center gap-2">
                               <Link
                                 href={`/sessions/${app.id}`}
                                 className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+                                aria-label={`Open ${app.name || "Untitled"} application`}
                               >
                                 Open
-                                <ArrowRight className="w-4 h-4" />
+                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
                               </Link>
                               <button
                                 type="button"
                                 onClick={() => openEdit(app)}
                                 className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100"
+                                aria-label={`Edit ${app.name || "Untitled"} application`}
                               >
-                                <Pencil className="h-3.5 w-3.5" />
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                                 Edit
                               </button>
                               <button
@@ -425,11 +445,12 @@ export default function DashboardPage() {
                                 disabled={deletingId === app.id}
                                 onClick={() => askDelete(app)}
                                 className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-60"
+                                aria-label={`Delete ${app.name || "Untitled"} application`}
                               >
                                 {deletingId === app.id ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 ) : (
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                                 )}
                                 Delete
                               </button>
@@ -440,96 +461,32 @@ export default function DashboardPage() {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="md:hidden space-y-3">
-                  {applications.map((app) => (
-                    <article
-                      key={app.id}
-                      className="rounded-lg border border-gray-200 p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {app.name || "Untitled"}
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {(app.job_title || "-") +
-                              " · " +
-                              (app.company_name || "-")}
-                          </p>
-                        </div>
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[app.status] || STATUS_STYLES.draft}`}
-                        >
-                          {formatStatus(app.status)}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 text-xs text-gray-600">
-                        <p>
-                          Score:{" "}
-                          {app.overall_score == null
-                            ? "-"
-                            : `${app.overall_score}%`}
-                        </p>
-                        <p>Updated: {formatDate(app.updated_at)}</p>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Link
-                          href={`/sessions/${app.id}`}
-                          className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs text-white"
-                        >
-                          Open
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(app)}
-                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-3 py-1.5 text-xs text-gray-700"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          disabled={deletingId === app.id}
-                          onClick={() => askDelete(app)}
-                          className="inline-flex items-center gap-1 rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-700"
-                        >
-                          {deletingId === app.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                          Delete
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
               </>
             )}
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+          
+          <section
+            className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm"
+            aria-labelledby="history-title"
+          >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 id="history-title" className="text-lg font-semibold text-gray-900">
                 Applications History
               </h2>
               <span className="text-sm text-gray-500">Newest first</span>
             </div>
 
             {loadingEvents && (
-              <div className="py-10 flex items-center justify-center text-gray-500">
+              <div className="py-10 flex items-center justify-center text-gray-500" role="status" aria-live="polite">
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Loading history...
               </div>
             )}
 
             {!loadingEvents && errorEvents && (
-              <div className="py-8 rounded-lg border border-red-200 bg-red-50 text-red-700 flex items-center justify-center gap-2">
-                <AlertCircle className="w-4 h-4" />
+              <div className="py-8 rounded-lg border border-red-200 bg-red-50 text-red-700 flex items-center justify-center gap-2" role="alert">
+                <AlertCircle className="w-4 h-4" aria-hidden="true" />
                 {errorEvents}
               </div>
             )}
@@ -539,7 +496,7 @@ export default function DashboardPage() {
             )}
 
             {!loadingEvents && !errorEvents && events.length > 0 && (
-              <ol className="space-y-3">
+              <ol className="space-y-3" aria-label="Application events timeline">
                 {events.map((event) => {
                   const EventIcon = mapEventTypeToIcon(event.event_type);
                   return (
@@ -555,13 +512,9 @@ export default function DashboardPage() {
                           {event.event_label}
                         </p>
                         <p className="text-xs text-gray-600 mt-0.5">
-                          {event.metadata?.jobTitle ||
-                            event.metadata?.name ||
-                            "Application activity"}
+                          {event.metadata?.jobTitle || event.metadata?.name || "Application activity"}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(event.occurred_at)}
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(event.occurred_at)}</p>
                       </div>
                     </li>
                   );
@@ -572,163 +525,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {editingId && (
-        <div className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center p-3 sm:p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Edit Application
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Update details and status.
-            </p>
-
-            <div className="mt-4 space-y-3">
-              <div>
-                <label
-                  className="text-sm font-medium text-gray-700"
-                  htmlFor="edit-name"
-                >
-                  Application name
-                </label>
-                <input
-                  id="edit-name"
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm((s) => ({ ...s, name: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                  maxLength={140}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="edit-company"
-                  >
-                    Company
-                  </label>
-                  <input
-                    id="edit-company"
-                    value={editForm.companyName}
-                    onChange={(e) =>
-                      setEditForm((s) => ({
-                        ...s,
-                        companyName: e.target.value,
-                      }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    maxLength={120}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor="edit-job-title"
-                  >
-                    Role
-                  </label>
-                  <input
-                    id="edit-job-title"
-                    value={editForm.jobTitle}
-                    onChange={(e) =>
-                      setEditForm((s) => ({ ...s, jobTitle: e.target.value }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    maxLength={120}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className="text-sm font-medium text-gray-700"
-                  htmlFor="edit-status"
-                >
-                  Status
-                </label>
-                <select
-                  id="edit-status"
-                  value={editForm.status}
-                  onChange={(e) =>
-                    setEditForm((s) => ({ ...s, status: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                >
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {formatStatus(status)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {editError && (
-                <p className="text-sm text-red-600" role="alert">
-                  {editError}
-                </p>
-              )}
-            </div>
-
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeEdit}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                disabled={savingEdit}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={saveEdit}
-                disabled={savingEdit}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
-              >
-                {savingEdit ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : null}
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {deleteModal.open && deleteModal.app && (
-        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Delete Application?
-            </h3>
-            <p className="text-sm text-gray-600 mt-2">
-              This will permanently remove{" "}
-              <strong>{deleteModal.app.name || "this application"}</strong> and
-              related analysis artifacts.
-            </p>
-
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={cancelDelete}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+     
     </div>
   );
 }
