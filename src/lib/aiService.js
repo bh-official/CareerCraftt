@@ -1,15 +1,20 @@
+// Read API configuration from environment so secrets are never hard-coded.
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+// Base URL for OpenRouter chat completions endpoint.
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+// Default model used when no explicit model override is provided.
 const DEFAULT_MODEL = "openai/gpt-5.3-codex";
 
 /**
  * Call OpenRouter API
  */
 async function callOpenRouter(messages, options = {}) {
+  // Guard against missing API key to avoid ambiguous downstream errors.
   if (!OPENROUTER_API_KEY) {
     throw new Error("OpenRouter API key not configured");
   }
 
+  // Forward to OpenRouter's Chat Completions API with app metadata headers.
   const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
@@ -19,6 +24,7 @@ async function callOpenRouter(messages, options = {}) {
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
       "X-Title": "CareerCraft",
     },
+    // Merge default settings with any overrides from the caller.
     body: JSON.stringify({
       model: options.model || DEFAULT_MODEL,
       messages,
@@ -28,12 +34,14 @@ async function callOpenRouter(messages, options = {}) {
     }),
   });
 
+  // Surface API errors with response body for easier debugging.
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
   }
 
   const data = await response.json();
+  // Return assistant content from the first choice.
   return data.choices[0].message.content;
 }
 
@@ -43,6 +51,7 @@ async function callOpenRouter(messages, options = {}) {
 function parseJsonWithRecovery(raw) {
   const text = String(raw || "").trim();
 
+  // Build candidate strings to attempt JSON parsing on.
   const candidates = [];
 
   // Raw response as-is
@@ -63,6 +72,7 @@ function parseJsonWithRecovery(raw) {
     candidates.push(withoutFences.slice(firstBrace, lastBrace + 1));
   }
 
+  // Try each candidate with light sanitization if needed.
   for (const candidate of candidates) {
     try {
       return JSON.parse(candidate);
@@ -70,7 +80,7 @@ function parseJsonWithRecovery(raw) {
       // continue to sanitized attempt
     }
 
-    // Common repair: trailing commas before ] or }
+    // Common repair: remove trailing commas and control chars.
     const sanitized = candidate
       .replace(/,\s*([}\]])/g, "$1")
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
@@ -93,6 +103,7 @@ export async function analyzeJobMatch(
   resumeText,
   options = {},
 ) {
+  // Prompt with explicit JSON schema to improve structured responses.
   const prompt = `
 You are an expert career analyst and recruiter. Analyze the following job description against the candidate's resume.
 
@@ -198,6 +209,7 @@ Respond ONLY with valid JSON, no additional text.
   ]);
 
   try {
+    // Parse with recovery to handle markdown fences or minor format errors.
     return parseJsonWithRecovery(result);
   } catch (error) {
     console.error("[analyzeJobMatch] JSON parse failure", {
@@ -217,6 +229,7 @@ export async function generateCoverLetter(
   companyName,
   positionTitle,
 ) {
+  // Provide a strict JSON output format to simplify downstream parsing.
   const prompt = `
 Write a professional cover letter for the following job application.
 
@@ -261,6 +274,7 @@ Respond ONLY with valid JSON.
   ]);
 
   try {
+    // Prefer direct parse; fallback to extracting a JSON block.
     return JSON.parse(result);
   } catch {
     const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -275,6 +289,7 @@ Respond ONLY with valid JSON.
  * Generate application optimization recommendations
  */
 export async function generateOptimization(jobDescription, resumeText) {
+  // Request JSON-only optimization tips for consistent rendering.
   const prompt = `
 Analyze the resume against the job description and provide optimization recommendations.
 
@@ -327,6 +342,7 @@ Respond ONLY with valid JSON.
   ]);
 
   try {
+    // Prefer direct parse; fallback to extracting a JSON object from text.
     return JSON.parse(result);
   } catch {
     const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -341,6 +357,7 @@ Respond ONLY with valid JSON.
  * Generate interview preparation
  */
 export async function generateInterviewPrep(jobDescription, resumeText) {
+  // Request JSON-only interview guidance for predictable UI mapping.
   const prompt = `
 Generate comprehensive interview preparation based on the job description and resume.
 
@@ -404,6 +421,7 @@ Respond ONLY with valid JSON.
   ]);
 
   try {
+    // Prefer direct parse; fallback to extracting a JSON object from text.
     return JSON.parse(result);
   } catch {
     const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -418,6 +436,7 @@ Respond ONLY with valid JSON.
  * Generate career development suggestions
  */
 export async function generateCareerDevelopment(jobDescription, resumeText) {
+  // Request JSON-only career development recommendations.
   const prompt = `
 Based on the job description and candidate's current profile, provide career development recommendations.
 
@@ -484,6 +503,7 @@ Respond ONLY with valid JSON.
   ]);
 
   try {
+    // Prefer direct parse; fallback to extracting a JSON object from text.
     return JSON.parse(result);
   } catch {
     const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -494,6 +514,7 @@ Respond ONLY with valid JSON.
   }
 }
 
+// Export a grouped service for convenience imports.
 export default {
   analyzeJobMatch,
   generateCoverLetter,

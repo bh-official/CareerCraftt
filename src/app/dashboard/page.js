@@ -17,6 +17,7 @@ import EditApplicationModal from "@/components/dashboard/EditApplicationModal";
 import { STATUS_OPTIONS } from "@/components/dashboard/constants";
 import { groupEventsByDay } from "@/components/dashboard/utils";
 
+// Map event type strings to icon components for history timeline rows.
 function mapEventTypeToIcon(eventType) {
   if (eventType === "created") return CheckCircle2;
   if (eventType === "analyzed") return Target;
@@ -26,20 +27,24 @@ function mapEventTypeToIcon(eventType) {
 }
 
 export default function DashboardPage() {
+  // Core datasets for dashboard widgets.
   const [applications, setApplications] = useState([]);
   const [events, setEvents] = useState([]);
 
+  // Loading + error state for independent requests.
   const [loadingApps, setLoadingApps] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [errorApps, setErrorApps] = useState("");
   const [errorEvents, setErrorEvents] = useState("");
 
+  // Filter + search controls for applications and history views.
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [historySearch, setHistorySearch] = useState("");
   const [historyTypeFilter, setHistoryTypeFilter] = useState("all");
   const [historySort, setHistorySort] = useState("desc");
 
+  // Edit modal state and form values.
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -50,23 +55,28 @@ export default function DashboardPage() {
   const [editError, setEditError] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Delete confirmation state.
   const [deletingId, setDeletingId] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ open: false, app: null });
 
   const loadApplications = async () => {
     try {
+      // Reset state for a fresh fetch.
       setLoadingApps(true);
       setErrorApps("");
 
+      // Build query parameters based on current filters.
       const query = new URLSearchParams({ limit: "200", offset: "0" });
       if (search.trim()) query.set("search", search.trim());
       if (statusFilter) query.set("status", statusFilter);
 
+      // Fetch the user's applications list.
       const response = await fetch(`/api/applications?${query.toString()}`, {
         cache: "no-store",
         credentials: "include",
       });
 
+      // Redirect to login if session expired.
       if (response.status === 401) {
         window.location.href = "/login";
         return;
@@ -89,6 +99,7 @@ export default function DashboardPage() {
 
   const loadEvents = async () => {
     try {
+      // Fetch recent activity events for the history timeline.
       setLoadingEvents(true);
       setErrorEvents("");
 
@@ -114,16 +125,20 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    // Reload applications when search or status filters change.
     loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter]);
 
   useEffect(() => {
+    // Load history events once on mount.
     loadEvents();
   }, []);
 
+  // Total count used for summary display.
   const totalApplications = useMemo(() => applications.length, [applications]);
 
+  // Filter and sort events using the current history controls.
   const filteredEvents = useMemo(() => {
     const q = historySearch.trim().toLowerCase();
     return [...events]
@@ -142,15 +157,18 @@ export default function DashboardPage() {
       });
   }, [events, historySearch, historyTypeFilter, historySort]);
 
+  // Group events into date buckets for timeline rendering.
   const groupedEvents = useMemo(
     () => groupEventsByDay(filteredEvents),
     [filteredEvents],
   );
+  // Cache the day keys to avoid recalculating on re-render.
   const groupedEventKeys = useMemo(
     () => Object.keys(groupedEvents),
     [groupedEvents],
   );
 
+  // Open the edit modal and populate form fields.
   const openEdit = (app) => {
     setEditingId(app.id);
     setEditError("");
@@ -162,11 +180,13 @@ export default function DashboardPage() {
     });
   };
 
+  // Close the edit modal and clear errors.
   const closeEdit = () => {
     setEditingId(null);
     setEditError("");
   };
 
+  // Validate edit form before submitting.
   const validateEdit = () => {
     if (!editForm.name.trim()) return "Application name is required";
     if (editForm.companyName.trim().length > 120)
@@ -176,6 +196,7 @@ export default function DashboardPage() {
     return "";
   };
 
+  // Persist application edits with optimistic UI updates.
   const saveEdit = async () => {
     const validationError = validateEdit();
     if (validationError) {
@@ -202,6 +223,7 @@ export default function DashboardPage() {
     setEditError("");
 
     try {
+      // Submit update to API.
       const response = await fetch("/api/applications", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -227,6 +249,7 @@ export default function DashboardPage() {
       closeEdit();
       loadEvents();
     } catch (err) {
+      // Roll back on failure.
       setApplications(previous);
       setEditError(err.message || "Failed to update application");
     } finally {
@@ -234,25 +257,30 @@ export default function DashboardPage() {
     }
   };
 
+  // Open confirmation modal for delete action.
   const askDelete = (app) => {
     setDeleteModal({ open: true, app });
   };
 
+  // Dismiss delete confirmation modal.
   const cancelDelete = () => {
     setDeleteModal({ open: false, app: null });
   };
 
+  // Delete application with optimistic removal.
   const confirmDelete = async () => {
     if (!deleteModal.app) return;
 
     const id = deleteModal.app.id;
     const previous = [...applications];
 
+    // Remove immediately for snappy UI and restore on error.
     setDeletingId(id);
     setApplications((prev) => prev.filter((app) => app.id !== id));
     cancelDelete();
 
     try {
+      // Issue delete request to API.
       const response = await fetch(`/api/applications?id=${id}`, {
         method: "DELETE",
       });
@@ -262,6 +290,7 @@ export default function DashboardPage() {
       }
       loadEvents();
     } catch (err) {
+      // Restore list and surface error.
       setApplications(previous);
       setErrorApps(err.message || "Delete failed");
     } finally {
