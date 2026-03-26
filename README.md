@@ -169,11 +169,11 @@ Although responsibilities were initially divided into planning, frontend, backen
 - US-049 As a user I want lifecycle events captured automatically so that history reflects key actions
 - US-050 As a user I want optional generated artifacts saved against my session so that I can reopen them later
 - US-051 As a user I want consistent API validation errors so that bad inputs are diagnosable and testable
-- US-052 As a accessibility-focused user I want core landmarks and skip navigation so that keyboard/screen-reader navigation is efficient |
+- US-052 As a accessibility-focused user I want core landmarks and skip navigation so that keyboard/screen-reader navigation is efficient
 
 ## Project Planning
 
-- [Trello board](documents/trello1.png)
+![Trello board](documents/trello1.png)
 
 ## Application Architecture
 
