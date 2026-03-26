@@ -237,11 +237,12 @@ export function AnalysisProvider({ children }) {
       // Distinguish between different error types for better UX
       let userError = error.message;
       if (error instanceof TypeError && error.message.includes("fetch")) {
-        userError = "Network connection error. Please check your internet and try again.";
+        userError =
+          "Network connection error. Please check your internet and try again.";
       } else if (error.message.includes("timeout")) {
         userError = "Request took too long. Please try again.";
       }
-      
+
       dispatch({ type: "SET_ERROR", payload: userError });
       throw error;
     }
