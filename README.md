@@ -21,7 +21,7 @@
 - [MVP](#mvp-core-deliverables)
 - [Stretch Goals Achieved](#stretch-goals-achieved)
 - [Future Goals](#future-goals)
-- [Route Map](#route-map)
+- [Route Map](#route-map-app-router)
 - [Wireframes](#wireframes)
 - [Core Features](#core-features)
 - [User Stories](#user-stories)
