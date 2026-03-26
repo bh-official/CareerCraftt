@@ -1,17 +1,13 @@
-<h1 align="center">CareerCraft</h1>
+<h1>
+  <img src="/public/logo.svg" alt="CareerCraft Logo" width="40" style="vertical-align: middle;" />
+  CareerCraft
+</h1>
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black" /> 
   <img src="https://img.shields.io/badge/Postgres-DB-blue" /> 
   <img src="https://img.shields.io/badge/Auth-Clerk-purple" /> 
   <img src="https://img.shields.io/badge/Status-Deployed-green" />
 </p>
-
-# CareerCraft
-
-![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![PostgreSQL](https://img.shields.io/badge/Postgres-DB-blue)
-![Clerk](https://img.shields.io/badge/Auth-Clerk-purple)
-![Status](https://img.shields.io/badge/Status-Deployed-green)
 
 <p align="center">
 <img src="/public/logo.svg" alt="CareerCraft Logo" width="200" />
