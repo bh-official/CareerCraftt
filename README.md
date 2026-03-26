@@ -178,7 +178,7 @@ Although responsibilities were initially divided into planning, frontend, backen
 
 ## Project Planning
 
-![Trello board](documents/trello1.png)
+![Trello board](documents/trello.png)
 
 ## Application Architecture
 
