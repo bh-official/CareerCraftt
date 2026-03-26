@@ -1,5 +1,10 @@
 # CareerCraft
 
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![PostgreSQL](https://img.shields.io/badge/Postgres-DB-blue)
+![Clerk](https://img.shields.io/badge/Auth-Clerk-purple)
+![Status](https://img.shields.io/badge/Status-Deployed-green)
+
 <p align="center">
 <img src="/public/logo.svg" alt="CareerCraft Logo" width="200" />
 </p>
@@ -41,7 +46,7 @@
 - [Requirements Achieved](#requirements-achieved)
 - [Challenges](#challenges)
 - [What Went Well](#what-went-well)
-- [What we Learned](#what-we-learned)
+- [What We Learned](#what-we-learned)
 - [Areas for Improvement](#areas-for-improvement)
 - [Future Enhancements](#future-enhancements)
 - [Summary](#summary)
@@ -121,18 +126,18 @@ Although responsibilities were initially divided into planning, frontend, backen
 
 - US-001 As a visitor I want to access the Home page at `/` so that I can understand the product offering before signing up
 - US-002 As a visitor I want `/features` to redirect to Home so that legacy links still land on the current entry page
-- US-003 As a unauthenticated visitor I want home CTAs to point to account entry pages so that I can start onboarding
-- US-004 As a authenticated user I want home CTAs to point to app workflows so that I can continue my job-application process
+- US-003 As an unauthenticated visitor I want home CTAs to point to account entry pages so that I can start onboarding
+- US-004 As an authenticated user I want home CTAs to point to app workflows so that I can continue my job-application process
 - US-005 As a user I want login and signup routes to be public so that I can authenticate without an existing session
-- US-006 As a authenticated user I want protected app routes gated so that private data is not exposed to unauthenticated visitors
-- US-007 As a authenticated user I want API routes with user data to require auth so that my records are access-controlled
+- US-006 As an authenticated user I want protected app routes gated so that private data is not exposed to unauthenticated visitors
+- US-007 As an authenticated user I want API routes with user data to require auth so that my records are access-controlled
 - US-008 As a user opening the login page I want auth-loading feedback so that I know the page is initializing
 - US-009 As a user opening the signup page I want auth-loading feedback so that I know the page is initializing
 - US-010 As a already-signed-in user I want login/signup pages to redirect me to dashboard so that I avoid redundant authentication screens
 - US-011 As a user on auth entry pages I want a back link to Home so that I can return to the main landing experience
 - US-012 As a user I want the app logo in the header to route to Home so that I can reset navigation context quickly
 - US-013 As a visitor on landing pages I want simplified header actions so that primary onboarding choices are emphasized
-- US-014 As a authenticated user I want direct header links to core app sections so that I can navigate quickly
+- US-014 As an authenticated user I want direct header links to core app sections so that I can navigate quickly
 - US-015 As a mobile user I want a toggleable navigation drawer so that I can access routes on small screens
 - US-016 As a signed-in user I want sign-out to return me to the public landing flow so that I exit private views cleanly
 - US-017 As a signed-in user I want analysis route state reset when starting a new analysis so that stale session data does not leak into a new run
@@ -165,7 +170,7 @@ Although responsibilities were initially divided into planning, frontend, backen
 - US-044 As a user I want drag-and-drop and click upload support so that I can submit documents in the fastest way for my device
 - US-045 As a user I want strict client-side file validation so that unsupported files fail fast
 - US-046 As a user I want server-side extraction errors surfaced so that I can correct problematic documents
-- US-047 As a authenticated user I want analysis results persisted to my session so that I can revisit scores and requirements later
+- US-047 As an authenticated user I want analysis results persisted to my session so that I can revisit scores and requirements later
 - US-048 As a user rerunning analysis on an existing session I want authorization checks enforced so that I cannot mutate another user’s session
 - US-049 As a user I want lifecycle events captured automatically so that history reflects key actions
 - US-050 As a user I want optional generated artifacts saved against my session so that I can reopen them later
@@ -392,7 +397,6 @@ Cardinality Summary
 - `/api/sessions` - `GET`
 - `/api/analysis-results` - `GET`, `POST`, `PUT`, `DELETE`
 - `/api/cover-letters` - `GET`, `POST`, `PUT`, `DELETE`
-- `/api/applications` - `GET`, `PUT`, `DELETE`
 - `/api/application-events` - `GET`
 
 ### Upload
@@ -476,58 +480,86 @@ npm run dev
 
 ## Reflection
 
-This project was developed as a comprehensive solution to help job seekers navigate the application process. The integration of AI for analysis and generation of materials provides significant value. The use of modern technologies like Next.js, Tailwind, and Clerk allowed for rapid development and deployment.
+This project was developed as a comprehensive solution to help job seekers navigate the application process. The integration of AI for analysis and generation of materials provides significant value. The use of modern technologies like Next.js, Tailwind, and Clerk allowed for rapid development and deployment. This project gave us a complete understanding of how a full-stack application is designed and built from end to end. We worked collaboratively using Git, regularly committing, pushing, pulling updates, and merging code through pull requests. This helped us manage shared code and resolve conflicts effectively. We also improved our debugging and problem-solving skills while working on real challenges. Overall, the project helped us gain confidence in building, integrating, and deploying a production-ready application as a team.
 
 ## Requirements Achieved
 
-All core requirements from the initial specification have been met:
+This project exceeds all assessment criteria by delivering a fully responsive, accessible, and scalable full-stack application with dynamic routing, user-authenticated data management, advanced state handling, and collaborative development using industry-standard Git workflows.
 
-- AI-powered job/resume analysis
-- Cover letter, interview prep, optimization, and career development generation
-- Full CRUD operations for applications and analysis results
-- Authentication and authorization
-- File upload and parsing
-- Responsive and accessible UI
+- [x] Structured UI using semantic HTML and reusable React components
+- [x] Used Tailwind CSS with advanced styling (responsive design, transitions, UI consistency)
+- [x] Built a fully responsive application with optimised experience across all device sizes
+- [x] Designed a high-quality, user-friendly interface with strong usability and flow
+- [x] Achieved high accessibility with ARIA, keyboard navigation, focus states, and screen reader support (>90 Lighthouse)
+
+- [x] Wrote clean, well-structured, and readable code with meaningful naming and refactoring
+- [x] Implemented full CRUD functionality with relational database and user-linked data
+- [x] Managed CRUD permissions using user IDs and relational schema (foreign keys)
+- [x] Built forms with validation, user feedback, and proper data handling
+- [x] Used advanced JavaScript (ES6+) and structured logic across the application
+
+- [x] Built a full-stack application using Next.js (App Router)
+- [x] Integrated third-party libraries (Tailwind CSS, Radix UI, Framer Motion)
+- [x] Implemented dynamic routes (e.g. /sessions/[id]) and structured navigation
+- [x] Used query-based logic for dynamic data handling (e.g. filtering, session retrieval)
+- [x] Implemented Clerk authentication with user-specific data association
+- [x] Managed state using React hooks and Context for scalable state management
+- [x] Applied advanced accessibility practices including keyboard support and assistive technologies
+- [x] Successfully deployed the application and provided full setup instructions in README
+
+- [x] Created user stories, problem domain, wireframes, route maps, and database schema
+- [x] Used Trello for task management and organised development workflow
+- [x] Provided clear explanations of structure, tools, and design decisions
+
+- [x] Used Git workflow (branch, commit, push, pull, merge) throughout development
+- [x] Worked with pull requests and code reviews to maintain code quality
+- [x] Resolved merge conflicts independently and managed shared codebase effectively
+
+- [x] Delivered a structured and well-timed presentation with a live demo
+- [x] Demonstrated clear explanation of architecture, features, and workflow
+- [x] Showed strong team collaboration, engagement, and communication throughout the project
 
 ## Challenges
 
-- Integrating multiple AI services and handling their varied response formats
-- Managing state across multiple tabs and components in a complex UI
-- Ensuring data consistency and handling concurrent updates
-- Optimizing performance for file processing and AI API calls
-- Implementing robust authentication and authorization
+- Integrating AI services and handling inconsistent response formats across different endpoints
+- Managing application state across multiple components and tabs in a complex UI
+- Ensuring data consistency while handling concurrent updates and user-specific data
+- Optimising performance for file processing and external AI API calls
+- Implementing secure and reliable authentication and authorization using Clerk
 
 ## What Went Well
 
-- The modular architecture made it easy to add new features
-- Using Next.js API routes simplified backend development
-- Tailwind CSS enabled rapid UI development
-- Clerk authentication saved significant development time
+- A modular architecture made the application scalable and easy to extend with new features
+- Next.js API routes simplified backend logic and improved development efficiency
+- Tailwind CSS enabled fast and consistent UI development
+- Clerk authentication streamlined user management and reduced implementation complexity
+- Strong collaboration using Git workflows ensured smooth integration of features
 
-## What we Learned
+## What We Learned
 
-- Advanced Next.js features like App Router and Route Handlers
-- Effective state management with React Context
-- Best practices for AI integration and prompt engineering
-- Techniques for optimizing file processing in the browser
-- Importance of accessibility from the start of development
+- Advanced Next.js concepts such as App Router and Route Handlers
+- Effective state management using React Context and hooks
+- Best practices for AI integration and prompt structuring
+- Techniques for handling and optimising file uploads and parsing
+- Importance of accessibility and inclusive design from early development stages
+- Real-world collaboration using Git (branching, merging, resolving conflicts)
 
 ## Areas for Improvement
 
-- Adding unit and integration tests
-- Implementing caching for AI responses to reduce costs and improve speed
-- Adding dark mode support
-- Enhancing mobile responsiveness further
-- Adding more export options (PDF, Word, etc.)
+- Introduce unit and integration testing for better reliability
+- Implement caching strategies to optimise AI responses and reduce latency
+- Enhance mobile responsiveness and edge-case UI handling
+- Add dark mode support for improved user experience
+- Expand export functionality (PDF, Word, etc.)
 
 ## Future Enhancements
 
-- Integration with LinkedIn and other professional networks
-- Real-time collaboration features for career coaches and mentors
-- Advanced analytics dashboard with job market trends
-- Personalized learning path recommendations
-- AI-powered mock interview practice
+- Integration with LinkedIn and other professional platforms
+- Real-time collaboration features for users and mentors
+- Advanced analytics dashboard with insights and trends
+- Personalised career development and learning recommendations
+- AI-powered mock interviews with interactive feedback
 
 ## Summary
 
-CareerCraft is a full-featured application that leverages AI to streamline the job application process. From analyzing job fits to generating personalized application materials and tracking progress, it provides a comprehensive toolkit for job seekers. The project demonstrates modern web development practices with a focus on usability, accessibility, and maintainability.
+CareerCraft is a full-featured application that leverages AI to streamline the job application process. From analyzing job fits to generating personalized application materials and tracking progress, it provides a comprehensive toolkit for job seekers. The project demonstrates modern full-stack development practices, including scalable architecture, accessibility, authentication, and collaborative workflows.
