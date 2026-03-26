@@ -312,7 +312,7 @@ CareerCraft/
 - **ESLint 9** Code quality and linting
 - **npm** - Package management
 
-### Development & Collaboration
+### Collaboration & Project Management
 
 - **Git** - Version control
 - **GitHub** - Code hosting and collaboration
@@ -405,7 +405,7 @@ Cardinality Summary
 - Analysis page allows users to input job description and resume for AI analysis
 - Results are displayed in tabs: Overview, Cover Letter, Gaps, Optimization, Interview, Career Development
 - Users can generate and save cover letters, optimization tips, etc.
-- Application history tracks all events (created, analyzed, deleted, status updated)
+- Application history tracks all events
 
 ## Major Changes & Polish
 
@@ -421,6 +421,7 @@ Cardinality Summary
 - ARIA labels and relationships (`aria-label`, `aria-describedby`, `aria-labelledby`)
 - Live regions (`aria-live`) and status/alert roles
 - Keyboard-operable interactive controls
+- Used Motion UI for animations and transitions
 
 ## Getting Started
 
@@ -449,7 +450,7 @@ npm install
 3. Create a `.env` file in the project root and add required values (see Environment Variables section).
 4. Initialize your database schema:
 
-- Run SQL from `SQL.SQL` in your Postgres/Supabase SQL editor.
+Run SQL from `SQL.SQL` in your Postgres/Supabase SQL editor.
 
 5. Run the development server:
 
@@ -470,7 +471,7 @@ npm run dev
 
 ## Lighthouse
 
-![Lighthouse](lighthouse.png)
+![Lighthouse](documents/lighthouse.png)
 
 ## Reflection
 
