@@ -59,7 +59,7 @@ This project operates in the AI-assisted career and job application domain, focu
 
 Although responsibilities were initially divided into planning, frontend, backend, database, and deployment, all team members actively collaborated across the entire codebase. Each member contributed to multiple areas including UI development, API integration, debugging, and testing, ensuring shared ownership of the project.
 
-### MVP (Core Deliverables)
+## MVP (Core Deliverables)
 
 - User authentication and account access flow (sign up, sign in, sign out).
 - Landing experience and guided entry into the app workflow.
@@ -67,7 +67,7 @@ Although responsibilities were initially divided into planning, frontend, backen
 - AI-generated outputs for cover letter, optimization suggestions, interview prep, and career development.
 - Dashboard/session tracking so users can view and continue application work.
 
-### Stretch Goals Achieved
+## Stretch Goals Achieved
 
 - Polished navigation behavior and route handling (including clean landing/redirect behavior).
 - Personalized authenticated header experience (user greeting + profile avatar fallback).
@@ -79,7 +79,7 @@ Although responsibilities were initially divided into planning, frontend, backen
 - Advanced analytics and event tracking
 - File upload and parsing
 
-### Future Goals
+## Future Goals
 
 - Team collaboration UI to activate existing shared-access foundations.
 - Advanced filtering, analytics, and trend insights in dashboard history.
@@ -88,27 +88,14 @@ Although responsibilities were initially divided into planning, frontend, backen
 - Export/share enhancements (portfolio-ready reports, application bundles).
 - Usage limits/plan management and production-grade observability.
 
-### Route Map (App Router)
+## Route Map (App Router)
 
 ![Route Map](documents/CareerCraft-route-map.png)
 
-### Wireframe Explanation
+## Wireframes
 
 - Base low-fi wireframe (Desktop version): [`documents/wireframe.png`](documents/wireframe.png)
 - Mobile version: [`documents/wireframe_mobile.png`](documents/wireframe_mobile.png)
-
-What the wireframe communicates:
-
-- **Screen hierarchy**: Home → Auth (Login/Signup) → Dashboard.
-- **Redirect behavior**: `/features` is shown as immediate redirect to `/`.
-- **Auth navigation clarity**: Login and Signup explicitly include **“Back to Home”**.
-- **Key layout regions** per screen:
-  - Header/nav
-  - Main content/hero
-  - Auth form card
-  - Dashboard panels (applications/history)
-  - Representative loading/error/empty states
-- **Flow transitions**: directional arrows/labels illustrate user movement between pages and post-auth outcomes.
 
 ## Core Features
 
@@ -178,11 +165,6 @@ What the wireframe communicates:
 - US-050 As a user I want optional generated artifacts saved against my session so that I can reopen them later
 - US-051 As a user I want consistent API validation errors so that bad inputs are diagnosable and testable
 - US-052 As a accessibility-focused user I want core landmarks and skip navigation so that keyboard/screen-reader navigation is efficient |
-
-## Wireframes
-
-- [Mobile Wireframe](documents/wireframe_mobile.png)
-- [Desktop Wireframe](documents/wireframe.png)
 
 ## Project Planning
 
