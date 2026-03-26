@@ -2,9 +2,9 @@
   <img src="/public/logo.svg" alt="CareerCraft Logo" width="40" style="vertical-align: middle;" />
   CareerCraft
 </h1>
-<p align="center">
+<h2 align="center">
   <strong>Craft your path to the perfect job</strong>
-</p>
+</h2>
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black" /> 
   <img src="https://img.shields.io/badge/Postgres-DB-blue" /> 
