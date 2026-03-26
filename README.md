@@ -538,7 +538,7 @@ This project exceeds all assessment criteria by delivering a fully responsive, a
 
 - Advanced Next.js concepts such as App Router and Route Handlers
 - Effective state management using React Context and hooks
-- Best practices for AI integration and prompt structuring
+- Best practices for AI integration and structuring
 - Techniques for handling and optimising file uploads and parsing
 - Importance of accessibility and inclusive design from early development stages
 - Real-world collaboration using Git (branching, merging, resolving conflicts)
