@@ -41,7 +41,7 @@
 - [Requirements Achieved](#requirements-achieved)
 - [Challenges](#challenges)
 - [What Went Well](#what-went-well)
-- [What I Learned](#what-i-learned)
+- [What we Learned](#what-we-learned)
 - [Areas for Improvement](#areas-for-improvement)
 - [Future Enhancements](#future-enhancements)
 - [Summary](#summary)
