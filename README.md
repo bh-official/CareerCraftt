@@ -361,6 +361,9 @@ Cardinality Summary
 - sessions (1) -> (0..many) interview_prep
 - sessions (1) -> (0..many) career_development
 
+In addition to standard SQL queries used throughout the application, some database setup and migration logic is implemented using PostgreSQL procedural blocks (PL/pgSQL). This is used to maintain data consistency, enforce constraints, and safely transition legacy structures, while all core CRUD operations remain handled through API routes.
+
+
 ## Schema Visualizer
 
 ![Database Schema](documents/schema-visualiser.png)
