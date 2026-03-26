@@ -3,14 +3,13 @@
   CareerCraft
 </h1>
 <p align="center">
+  <strong>Craft your path to the perfect job</strong>
+</p>
+<p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black" /> 
   <img src="https://img.shields.io/badge/Postgres-DB-blue" /> 
   <img src="https://img.shields.io/badge/Auth-Clerk-purple" /> 
   <img src="https://img.shields.io/badge/Status-Deployed-green" />
-</p>
-
-<p align="center">
-  <strong>Craft your path to the perfect job</strong>
 </p>
 
 <p align="center">
