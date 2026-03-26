@@ -96,11 +96,11 @@ Although responsibilities were initially divided into planning, frontend, backen
 
 **Desktop Version**
 
-- ![Base low-fi wireframe (Desktop version)](documents/wireframe.png)
+![Base low-fi wireframe (Desktop version)](documents/wireframe.png)
 
 **Mobile Version**
 
-- ![Mobile version](documents/wireframe_mobile.png)
+![Mobile version](documents/wireframe_mobile.png)
 
 ## Core Features
 
