@@ -17,13 +17,14 @@
 ## 📋 Table of Contents
 
 - [Problem Domain](#problem-domain)
-- [Core Features](#core-features)
-- [User Stories](#user-stories)
-- [MVP](#mvp)
+- [Team Members](#team-members)
+- [MVP](#mvp-core-deliverables)
 - [Stretch Goals Achieved](#stretch-goals-achieved)
 - [Future Goals](#future-goals)
-- [Wireframes](#wireframes)
 - [Route Map](#route-map)
+- [Wireframes](#wireframes)
+- [Core Features](#core-features)
+- [User Stories](#user-stories)
 - [Project Planning](#project-planning)
 - [Application Architecture](#application-architecture)
 - [The Tech Stack](#the-tech-stack)
@@ -423,7 +424,7 @@ Cardinality Summary
 - Keyboard-operable interactive controls
 - Used Motion UI for animations and transitions
 
-## Getting Started
+## Setup & Execution
 
 ### Prerequisites
 
