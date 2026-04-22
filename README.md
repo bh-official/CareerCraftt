@@ -21,7 +21,6 @@
 ## 📋 Table of Contents
 
 - [Problem Domain](#problem-domain)
-- [Team Members](#team-members)
 - [MVP](#mvp-core-deliverables)
 - [Stretch Goals Achieved](#stretch-goals-achieved)
 - [Future Goals](#future-goals)
@@ -53,16 +52,6 @@
 ## Problem Domain
 
 This project operates in the AI-assisted career and job application domain, focused on helping users move from opportunity discovery to confident submission through a single guided workflow. It enables candidates to analyze resume-to-job fit, identify skill and requirement gaps, generate tailored cover letters, receive ATS and readability optimization guidance, prepare for interviews, and plan ongoing career development steps. By combining these capabilities with authenticated user sessions, application tracking, and historical progress visibility, the system turns a typically fragmented job-search process into a structured, repeatable, and data-informed experience.
-
-## Team members
-
-- Bhuvaneswari Babu
-- Delight Iwenofu
-- Faisal Rehman
-- Hema Mistry
-- Lukas Mackevicius
-
-Although responsibilities were initially divided into planning, frontend, backend, database, and deployment, all team members actively collaborated across the entire codebase. Each member contributed to multiple areas including UI development, API integration, debugging, and testing, ensuring shared ownership of the project.
 
 ## MVP (Core Deliverables)
 
